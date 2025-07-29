@@ -23,11 +23,38 @@ interface MarineZone {
   synopsis_zone: string;
 }
 
-// Corrected marine zones data
+// Corrected marine zones data from NOAA
 const MARINE_ZONES: MarineZone[] = [
+  // New England / Boston Area
+  {
+    zone_code: 'ANZ230',
+    location_name: 'Boston Harbor',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ231',
+    location_name: 'Cape Cod Bay',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ233',
+    location_name: 'Nantucket Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ251',
+    location_name: 'Massachusetts Bay and Ipswich Bay',
+    synopsis_zone: 'ANZ200'
+  },
+  // Long Island Sound / New York Area
+  {
+    zone_code: 'ANZ330',
+    location_name: 'Long Island Sound East of New Haven CT/Port Jefferson NY',
+    synopsis_zone: 'ANZ300'
+  },
   {
     zone_code: 'ANZ335',
-    location_name: 'Long Island Sound',
+    location_name: 'Long Island Sound West of New Haven CT/Port Jefferson NY',
     synopsis_zone: 'ANZ300'
   },
   {
@@ -36,34 +63,64 @@ const MARINE_ZONES: MarineZone[] = [
     synopsis_zone: 'ANZ300'
   },
   {
-    zone_code: 'ANZ330',
-    location_name: 'Boston Harbor and Massachusetts Bay',
+    zone_code: 'ANZ340',
+    location_name: 'Peconic and Gardiners Bays',
     synopsis_zone: 'ANZ300'
   },
+  // New Jersey / Delaware Area
   {
-    zone_code: 'ANZ254',
-    location_name: 'Cape Cod Bay',
-    synopsis_zone: 'ANZ250'
+    zone_code: 'ANZ430',
+    location_name: 'Delaware Bay waters north of East Point NJ to Slaughter Beach DE',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ450',
+    location_name: 'Coastal waters from Sandy Hook to Manasquan Inlet NJ out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  // Chesapeake Bay / Virginia Area
+  {
+    zone_code: 'ANZ630',
+    location_name: 'Chesapeake Bay from Smith Point to Windmill Point VA',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ632',
+    location_name: 'Chesapeake Bay from New Point Comfort to Little Creek VA',
+    synopsis_zone: 'ANZ600'
+  },
+  // North Carolina Area
+  {
+    zone_code: 'ANZ130',
+    location_name: 'Albemarle Sound',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ135',
+    location_name: 'Pamlico Sound',
+    synopsis_zone: 'ANZ100'
+  },
+  // South Carolina / Georgia Area
+  {
+    zone_code: 'AMZ330',
+    location_name: 'Charleston Harbor',
+    synopsis_zone: 'AMZ300'
   },
   {
     zone_code: 'AMZ350',
-    location_name: 'Delaware Bay',
+    location_name: 'Coastal waters from South Santee River SC to Edisto Beach SC out 20 nm',
     synopsis_zone: 'AMZ300'
   },
+  // Florida East Coast
   {
-    zone_code: 'AMZ354',
-    location_name: 'Chesapeake Bay from Smith Point to Windmill Point',
-    synopsis_zone: 'AMZ300'
+    zone_code: 'AMZ552',
+    location_name: 'Volusia-Brevard County Line to Sebastian Inlet 0-20 nm',
+    synopsis_zone: 'AMZ500'
   },
   {
-    zone_code: 'GMZ876',
-    location_name: 'Tampa Bay',
-    synopsis_zone: 'GMZ870'
-  },
-  {
-    zone_code: 'PMZ153',
-    location_name: 'San Francisco Bay',
-    synopsis_zone: 'PMZ150'
+    zone_code: 'AMZ650',
+    location_name: 'Coastal waters from Jupiter Inlet to Deerfield Beach FL out 20 nm',
+    synopsis_zone: 'AMZ101'
   }
 ];
 
