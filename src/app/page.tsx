@@ -13,8 +13,10 @@ interface WeatherForecast {
   windSpeed: number;
   windDirection: string;
   waveHeight: number;
+  swellHeight: number;
   description: string;
   detailedForecast: string;
+  marineForecast?: string; // Additional NOAA marine commentary
 }
 
 interface MarineZone {
@@ -86,10 +88,25 @@ export default function Home() {
     const baseDate = startDate ? new Date(startDate) : new Date();
     const forecasts: WeatherForecast[] = [];
     
-    for (let i = 0; i < 8; i++) {
+    // Generate forecasts for 3 days (including selected date) every 4 hours
+    // 3 days * 6 periods per day (every 4 hours) = 18 data points
+    for (let i = 0; i < 18; i++) {
       const date = new Date(baseDate);
-      date.setDate(date.getDate() + Math.floor(i / 2));
-      date.setHours(i % 2 === 0 ? 6 : 18, 0, 0, 0);
+      const dayOffset = Math.floor(i / 6); // 6 periods per day
+      const hourOffset = (i % 6) * 4; // Every 4 hours: 0, 4, 8, 12, 16, 20
+      
+      date.setDate(date.getDate() + dayOffset);
+      date.setHours(hourOffset, 0, 0, 0);
+      
+      const period = hourOffset < 12 ? 'Morning' : 'Evening';
+      const marineForecastOptions = [
+        'Small craft advisory in effect',
+        'Seas moderate with occasional higher swells',
+        'Favorable conditions for boating',
+        'Low pressure system approaching from the west',
+        'High pressure ridge building',
+        'Wind waves 2 to 4 feet with southerly swells'
+      ];
       
       forecasts.push({
         date: date.toISOString(),
@@ -97,8 +114,10 @@ export default function Home() {
         windSpeed: 8 + Math.random() * 15,
         windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)],
         waveHeight: 1 + Math.random() * 4,
-        description: i % 2 === 0 ? 'Partly Cloudy' : 'Clear',
-        detailedForecast: `Marine conditions for ${zoneCode}. ${i % 2 === 0 ? 'Morning' : 'Evening'} forecast with moderate seas.`
+        swellHeight: 1 + Math.random() * 3,
+        description: ['Partly Cloudy', 'Clear', 'Overcast', 'Light Rain'][Math.floor(Math.random() * 4)],
+        detailedForecast: `${period} forecast with moderate seas.`,
+        marineForecast: marineForecastOptions[Math.floor(Math.random() * marineForecastOptions.length)]
       });
     }
     
@@ -128,7 +147,7 @@ export default function Home() {
         const noaaForecasts: WeatherForecast[] = [];
         const periods = data.properties?.periods || [];
 
-        for (let i = 0; i < Math.min(periods.length, 8); i++) {
+        for (let i = 0; i < Math.min(periods.length, 18); i++) {
           const period = periods[i];
           noaaForecasts.push({
             date: period.startTime,
@@ -136,8 +155,10 @@ export default function Home() {
             windSpeed: extractWindSpeed(period.detailedForecast || ''),
             windDirection: extractWindDirection(period.detailedForecast || ''),
             waveHeight: extractWaveHeight(period.detailedForecast || ''),
+            swellHeight: extractSwellHeight(period.detailedForecast || ''),
             description: period.shortForecast || '',
-            detailedForecast: period.detailedForecast || ''
+            detailedForecast: period.detailedForecast || '',
+            marineForecast: extractMarineForecast(period.detailedForecast || '')
           });
         }
 
@@ -181,6 +202,21 @@ export default function Home() {
       return Math.round((height1 + height2) / 2);
     }
     return 2; // default
+  };
+
+  const extractSwellHeight = (text: string): number => {
+    const swellMatch = text.match(/swells?\s+(\d+)(?:-(\d+))?\s*(?:to\s*(\d+))?\s*(?:feet|ft)/i);
+    if (swellMatch) {
+      const height1 = parseInt(swellMatch[1]);
+      const height2 = swellMatch[2] ? parseInt(swellMatch[2]) : height1;
+      return Math.round((height1 + height2) / 2);
+    }
+    return 1; // default
+  };
+
+  const extractMarineForecast = (text: string): string | undefined => {
+    const marineMatch = text.match(/marine forecast:\s*(.*)/i);
+    return marineMatch ? marineMatch[1].trim() : undefined;
   };
 
   // Fetch forecast when zone or date changes
@@ -253,20 +289,20 @@ export default function Home() {
       {/* Forecast Display */}
       {forecasts.length > 0 && !loading && (
         <div className="space-y-6">
+          {/* Forecast Summary */}
+          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
+            <h2 className="text-terminal-accent mb-4 font-semibold">
+              <span className="text-terminal-success">$</span> FORECAST SUMMARY
+            </h2>
+            <ForecastDisplay forecasts={forecasts} selectedZone={selectedZone} />
+          </div>
+
           {/* Chart Section */}
           <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
             <h2 className="text-terminal-accent mb-4 font-semibold">
               <span className="text-terminal-success">$</span> FORECAST VISUALIZATION
             </h2>
             <WeatherChart forecasts={forecasts} />
-          </div>
-
-          {/* Detailed Forecast */}
-          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
-            <h2 className="text-terminal-accent mb-4 font-semibold">
-              <span className="text-terminal-success">$</span> DETAILED FORECAST
-            </h2>
-            <ForecastDisplay forecasts={forecasts} selectedZone={selectedZone} />
           </div>
         </div>
       )}
