@@ -262,7 +262,13 @@ export default function Home() {
           if (data.forecasts.length > 0) {
             setForecasts(data.forecasts);
             setSynopsis(data.synopsis || '');
-            setError(`✅ Live NOAA data loaded successfully (${data.forecasts.length} periods)`);
+            
+            // Check if this is sample data due to NOAA blocking
+            if (data.warning) {
+              setError(`⚠️ ${data.warning} (${data.forecasts.length} periods shown)`);
+            } else {
+              setError(`✅ Live NOAA data loaded successfully (${data.forecasts.length} periods)`);
+            }
           } else {
             // Still set empty forecasts but show debug info
             setForecasts([]);
