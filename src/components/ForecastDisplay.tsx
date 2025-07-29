@@ -2,13 +2,20 @@ import { format } from 'date-fns';
 
 interface WeatherForecast {
   date: string;
-  period: string; // Morning/Evening/etc
+  period: string;
   winds: string;
   seas: string;
   waveDetail?: string;
   thunderstorms?: string;
   visibility?: string;
   description: string;
+  summary?: {
+    type: string;
+    icon: string;
+    text: string;
+    color: string;
+    bold: boolean;
+  };
 }
 
 interface ForecastDisplayProps {
@@ -45,54 +52,83 @@ export default function ForecastDisplay({ forecasts, selectedZone }: ForecastDis
       {/* Forecast Periods */}
       <div className="space-y-4">
         {forecasts.map((forecast, index) => (
-          <div key={index} className="border border-terminal-border rounded p-4 bg-terminal-bg">
-            <h3 className="text-terminal-accent font-semibold mb-3 text-lg">
-              <span className="text-terminal-success">▶</span> {forecast.period}
-            </h3>
+          <div key={`${forecast.period}-${index}`} className="bg-terminal-bg-alt p-4 rounded-lg border border-terminal-fg/20">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-terminal-accent font-semibold text-lg">
+                ▶ {forecast.period}
+              </h3>
+            </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Weather Description */}
-              <div className="space-y-2">
-                <div className="text-terminal-warning font-semibold">Weather:</div>
-                <div className="text-terminal-text flex items-center gap-2">
-                  <span className="text-xl">{getWeatherIcon(forecast.description)}</span>
-                  <span>{forecast.description}</span>
+            {/* Summary Section - Decision Tree Results */}
+            <div className="mb-4 p-3 rounded-lg bg-terminal-bg border border-terminal-fg/30">
+              <div className="text-terminal-accent font-semibold mb-2">Summary</div>
+              {forecast.summary ? (
+                <div 
+                  className={`flex items-center gap-2 ${
+                    forecast.summary.color === 'red' ? 'text-red-400' :
+                    forecast.summary.color === 'blue' ? 'text-blue-400' :
+                    forecast.summary.color === 'green' ? 'text-green-400' :
+                    'text-terminal-fg'
+                  } ${forecast.summary.bold ? 'font-bold' : ''}`}
+                >
+                  <span className="text-xl">{forecast.summary.icon}</span>
+                  <span>{forecast.summary.text}</span>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 text-green-400">
+                  <span className="text-xl">⛵</span>
+                  <span>Safe boating</span>
+                </div>
+              )}
+            </div>
 
-              {/* Marine Conditions */}
-              <div className="space-y-3">
+            {/* Inline Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+              {forecast.description && (
                 <div>
-                  <span className="text-terminal-accent font-semibold">Winds:</span>{' '}
-                  <span className="text-terminal-text">{forecast.winds}</span>
+                  <span className="text-terminal-accent font-semibold">Weather: </span>
+                  <span className="inline-flex items-center gap-1">
+                    {getWeatherIcon(forecast.description)} {forecast.description}
+                  </span>
                 </div>
-                
+              )}
+              
+              {forecast.winds && (
                 <div>
-                  <span className="text-terminal-accent font-semibold">Seas:</span>{' '}
-                  <span className="text-terminal-text">{forecast.seas}</span>
+                  <span className="text-terminal-accent font-semibold">Winds: </span>
+                  <span>{forecast.winds}</span>
                 </div>
-                
-                {forecast.waveDetail && (
-                  <div>
-                    <span className="text-terminal-accent font-semibold">Wave Detail:</span>{' '}
-                    <span className="text-terminal-text">{forecast.waveDetail}</span>
-                  </div>
-                )}
-                
-                {forecast.visibility && (
-                  <div>
-                    <span className="text-terminal-accent font-semibold">Visibility:</span>{' '}
-                    <span className="text-terminal-text">{forecast.visibility}</span>
-                  </div>
-                )}
-                
-                {forecast.thunderstorms && (
-                  <div>
-                    <span className="text-red-500 font-bold">⛈️ Thunderstorms:</span>{' '}
-                    <span className="text-red-400 font-semibold">{forecast.thunderstorms}</span>
-                  </div>
-                )}
-              </div>
+              )}
+              
+              {forecast.seas && (
+                <div>
+                  <span className="text-terminal-accent font-semibold">Seas: </span>
+                  <span>{forecast.seas}</span>
+                </div>
+              )}
+              
+              {forecast.waveDetail && (
+                <div>
+                  <span className="text-terminal-accent font-semibold">Wave Detail: </span>
+                  <span>{forecast.waveDetail}</span>
+                </div>
+              )}
+              
+              {forecast.visibility && (
+                <div>
+                  <span className="text-terminal-accent font-semibold">Visibility: </span>
+                  <span>{forecast.visibility}</span>
+                </div>
+              )}
+              
+              {forecast.thunderstorms && (
+                <div>
+                  <span className="text-terminal-accent font-semibold">Thunderstorms: </span>
+                  <span className="text-red-400 font-semibold inline-flex items-center gap-1">
+                    ⛈️ {forecast.thunderstorms}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -14,6 +14,13 @@ interface WeatherForecast {
   thunderstorms?: string;
   visibility?: string;
   description: string;
+  summary?: {
+    type: string;
+    icon: string;
+    text: string;
+    color: string;
+    bold: boolean;
+  };
 }
 
 interface MarineZone {

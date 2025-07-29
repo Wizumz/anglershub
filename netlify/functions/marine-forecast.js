@@ -51,7 +51,14 @@ exports.handler = async (event, context) => {
           waveDetail: '',
           thunderstorms: '',
           visibility: '',
-          description: 'SW winds 5 to 10 kt, becoming NW after midnight. Seas 1 ft or less.'
+          description: 'Clear',
+          summary: {
+            type: 'good',
+            icon: '⛵',
+            text: 'Safe boating',
+            color: 'green',
+            bold: false
+          }
         },
         {
           date: new Date().toISOString(),
@@ -61,7 +68,14 @@ exports.handler = async (event, context) => {
           waveDetail: '',
           thunderstorms: 'Slight chance of tstms in the afternoon',
           visibility: '',
-          description: 'NE winds around 5 kt, becoming SE in the afternoon. Seas 1 ft or less. Slight chance of showers and tstms in the afternoon.'
+          description: 'Partly cloudy',
+          summary: {
+            type: 'good',
+            icon: '⛵',
+            text: "She's a Beaut",
+            color: 'green',
+            bold: false
+          }
         }
       ];
       
@@ -209,6 +223,12 @@ function parseMarineForecast(html) {
         const isTimeStamp = /\d{1,2}:\d{2}\s+[AP]M/.test(rawPeriod);
         const isZoneHeader = /^[A-Z]{3}\d{3}/.test(rawPeriod);
         
+        // ALWAYS skip the first match as it's consistently problematic
+        if (matchCount === 1) {
+          console.log(`Skipping first match (always problematic): ${rawPeriod}`);
+          continue;
+        }
+        
         if (isTimeStamp || isZoneHeader) {
           console.log(`Skipping timestamp/header: ${rawPeriod}`);
           continue;
@@ -229,6 +249,9 @@ function parseMarineForecast(html) {
           
           // Extract just the weather conditions, not the full forecast
           const description = extractWeatherConditions(rawForecastText);
+          
+          // Generate summary using decision tree
+          const summary = generateSummary(rawForecastText, winds, seas, waveDetail);
 
           forecasts.push({
             date: new Date().toISOString(),
@@ -238,7 +261,8 @@ function parseMarineForecast(html) {
             waveDetail,
             thunderstorms,
             visibility,
-            description
+            description,
+            summary
           });
         }
       }
@@ -325,8 +349,14 @@ function extractWinds(text) {
 }
 
 function extractSeas(text) {
-  // NOAA format: "Seas 1 ft or less" or "Seas around 2 ft"
-  const seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  // NOAA format: "Seas 1 ft or less" or "Waves around 2 ft" - handle both
+  let seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  
+  // Fallback to "Waves" if "Seas" not found
+  if (!seasMatch) {
+    seasMatch = text.match(/waves?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  }
+  
   return seasMatch ? seasMatch[1].trim() : '';
 }
 
@@ -343,8 +373,14 @@ function extractThunderstorms(text) {
 }
 
 function extractVisibility(text) {
-  // NOAA format: "vsby 1 to 3 nm" or "Vsby 1 to 3 nm"
-  const visMatch = text.match(/vsby\s+([^.,]*(?:nm|miles?)[^.,]*)/i);
+  // NOAA format: "vsby 1 to 3 nm" or "Visibility 1 to 3 nm" - handle both cases
+  let visMatch = text.match(/vsby\s+([^.,]*(?:nm|miles?)[^.,]*)/i);
+  
+  // Fallback to full "Visibility" word if "vsby" not found
+  if (!visMatch) {
+    visMatch = text.match(/visibility\s+([^.,]*(?:nm|miles?)[^.,]*)/i);
+  }
+  
   return visMatch ? visMatch[1].trim() : '';
 }
 
@@ -383,4 +419,103 @@ function extractWeatherConditions(text) {
   }
   
   return conditions.join(', ');
+}
+
+function generateSummary(forecastText, winds, seas, waveDetail) {
+  const text = forecastText.toLowerCase();
+  
+  // 1. Check for Small Craft Advisory (highest priority)
+  if (text.includes('small craft') || text.includes('advisory')) {
+    return {
+      type: 'warning',
+      icon: '⚠️',
+      text: 'SMALL CRAFT ADVISORY',
+      color: 'red',
+      bold: true
+    };
+  }
+  
+  // 2. Extract numeric values for analysis
+  const seasHeight = extractNumericValue(seas);
+  const windSpeed = extractWindSpeed(winds);
+  const waveHeightFromDetail = extractNumericValue(waveDetail);
+  const wavePeriod = extractWavePeriod(waveDetail);
+  
+  // 3. Check for high seas (>3ft)
+  if (seasHeight > 3 || waveHeightFromDetail > 3) {
+    const height = Math.max(seasHeight, waveHeightFromDetail);
+    
+    // 4. Check steep wave conditions (period < 2x height)
+    if (wavePeriod > 0 && wavePeriod < (height * 2)) {
+      return {
+        type: 'danger',
+        icon: '🌊',
+        text: `STEEP WAVES: ${height}ft @ ${wavePeriod}s`,
+        color: 'red',
+        bold: true
+      };
+    }
+    
+    return {
+      type: 'caution',
+      icon: '⚠️',
+      text: `HIGH SEAS: ${height}ft`,
+      color: 'red',
+      bold: false
+    };
+  }
+  
+  // 5. Check for high winds (>15kt)
+  if (windSpeed > 15) {
+    return {
+      type: 'windy',
+      icon: '💨',
+      text: `WINDY: ${windSpeed}kt`,
+      color: 'blue',
+      bold: true
+    };
+  }
+  
+  // 6. Good conditions - fun messages
+  const goodMessages = [
+    'Safe boating',
+    "She's a Beaut",
+    'Pick this day',
+    'Hell yeah',
+    'Perfect conditions',
+    'Get out there!',
+    'Smooth sailing'
+  ];
+  
+  const randomMessage = goodMessages[Math.floor(Math.random() * goodMessages.length)];
+  
+  return {
+    type: 'good',
+    icon: '⛵',
+    text: randomMessage,
+    color: 'green',
+    bold: false
+  };
+}
+
+// Helper functions for numeric extraction
+function extractNumericValue(text) {
+  if (!text) return 0;
+  const match = text.match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : 0;
+}
+
+function extractWindSpeed(winds) {
+  if (!winds) return 0;
+  // Look for highest number in wind description (handles "5 to 10 kt", "gusts up to 20 kt")
+  const numbers = winds.match(/(\d+)/g);
+  if (!numbers) return 0;
+  return Math.max(...numbers.map(n => parseInt(n)));
+}
+
+function extractWavePeriod(waveDetail) {
+  if (!waveDetail) return 0;
+  // Look for "at X seconds" pattern
+  const match = waveDetail.match(/at\s+(\d+(?:\.\d+)?)\s*(?:seconds?|s)/i);
+  return match ? parseFloat(match[1]) : 0;
 }
