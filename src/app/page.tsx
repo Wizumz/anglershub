@@ -217,25 +217,53 @@ export default function Home() {
         throw new Error('Zone not found');
       }
 
-      // Construct the marine forecast URL
-      const marineUrl = `https://forecast.weather.gov/shmrn.php?mz=${selectedZone.toLowerCase()}&syn=${selectedMarineZone.synopsis_zone.toLowerCase()}`;
-      
-      setError(`Demo mode: Would fetch marine forecast from ${marineUrl}. Using sample data due to CORS restrictions.`);
-      
-      // For now, use sample data since we can't fetch the HTML directly due to CORS
-      // In a production environment, you'd need a backend proxy to fetch this data
-      const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
-      setForecasts(sampleForecasts);
-      
-      // Sample synopsis data
-      const sampleSynopsis = `HIGH PRESSURE RIDGE OVER THE WATERS THROUGH TONIGHT. LOW PRESSURE SYSTEM APPROACHING FROM THE WEST TUESDAY INTO WEDNESDAY. SMALL CRAFT ADVISORY CONDITIONS EXPECTED TUESDAY AFTERNOON AND WEDNESDAY.`;
-      setSynopsis(sampleSynopsis);
+      // Check if we're running on Netlify (has access to serverless functions)
+      const isNetlify = window.location.hostname.includes('netlify') || 
+                       window.location.hostname.includes('anglers') ||
+                       process.env.NODE_ENV === 'production';
+
+      if (isNetlify) {
+        // Use real NOAA data via Netlify serverless function
+        const apiUrl = `/api/marine-forecast?mz=${selectedZone}&syn=${selectedMarineZone.synopsis_zone}`;
+        
+        console.log('Fetching real NOAA data from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        setForecasts(data.forecasts || []);
+        setSynopsis(data.synopsis || '');
+        setError(''); // Clear any previous errors
+        
+      } else {
+        // Use sample data for local development or GitHub Pages
+        const marineUrl = `https://forecast.weather.gov/shmrn.php?mz=${selectedZone.toLowerCase()}&syn=${selectedMarineZone.synopsis_zone.toLowerCase()}`;
+        setError(`Demo mode: Would fetch from ${marineUrl}. Deploy to Netlify for real data.`);
+        
+        const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
+        setForecasts(sampleForecasts);
+        
+        const sampleSynopsis = `HIGH PRESSURE RIDGE OVER THE WATERS THROUGH TONIGHT. LOW PRESSURE SYSTEM APPROACHING FROM THE WEST TUESDAY INTO WEDNESDAY. SMALL CRAFT ADVISORY CONDITIONS EXPECTED TUESDAY AFTERNOON AND WEDNESDAY.`;
+        setSynopsis(sampleSynopsis);
+      }
       
     } catch (error) {
-      console.log('Using sample data:', error);
+      console.error('Error fetching forecast:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(`Error: ${errorMessage}. Using sample data.`);
+      
+      // Fall back to sample data
       const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
       setForecasts(sampleForecasts);
-      setError('Demo mode: Using sample marine forecast data (CORS proxy required for live data)');
     } finally {
       setLoading(false);
     }
