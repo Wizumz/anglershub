@@ -2,6 +2,10 @@
   publish = "out"
   command = "npm run build"
 
+[build.environment]
+  NETLIFY = "true"
+  NODE_ENV = "production"
+
 [functions]
   directory = "netlify/functions"
 
@@ -16,3 +20,14 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+# Ensure CSS and JS files are served with correct MIME types
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Content-Type = "text/css"
+    
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "text/javascript"

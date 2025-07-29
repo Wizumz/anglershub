@@ -9,8 +9,10 @@ module.exports = {
     extend: {
       colors: {
         'terminal': {
-          'bg': '#000000',
+          'bg': '#0a0a0a',
+          'bg-alt': '#151515',
           'text': '#00ff00',
+          'fg': '#00ff00', // alias for text
           'accent': '#00ffff',
           'warning': '#ffff00',
           'error': '#ff0000',

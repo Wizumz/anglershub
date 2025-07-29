@@ -217,10 +217,21 @@ export default function Home() {
         throw new Error('Zone not found');
       }
 
-      // Check if we're running on Netlify (has access to serverless functions)
-      const isNetlify = window.location.hostname.includes('netlify') || 
-                       window.location.hostname.includes('anglers') ||
-                       process.env.NODE_ENV === 'production';
+      // Better Netlify detection
+      const isNetlify = typeof window !== 'undefined' && (
+        window.location.hostname.includes('netlify.app') || 
+        window.location.hostname.includes('netlify.com') ||
+        process.env.NETLIFY === 'true' ||
+        // Check if we can access the API endpoint
+        window.location.origin.includes('netlify')
+      );
+
+      console.log('Deployment info:', {
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+        isNetlify,
+        nodeEnv: process.env.NODE_ENV,
+        netlifyEnv: process.env.NETLIFY
+      });
 
       if (isNetlify) {
         // Use real NOAA data via Netlify serverless function
@@ -230,22 +241,32 @@ export default function Home() {
         
         const response = await fetch(apiUrl);
         
+        console.log('API Response:', response.status, response.statusText);
+        
         if (!response.ok) {
-          throw new Error(`API request failed: ${response.status}`);
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`API request failed: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
+        console.log('API Data received:', data);
         
         if (data.error) {
           throw new Error(data.error);
         }
         
-        setForecasts(data.forecasts || []);
-        setSynopsis(data.synopsis || '');
-        setError(''); // Clear any previous errors
+        if (data.forecasts && data.forecasts.length > 0) {
+          setForecasts(data.forecasts);
+          setSynopsis(data.synopsis || '');
+          setError('✅ Live NOAA data loaded successfully');
+        } else {
+          throw new Error('No forecast data received from API');
+        }
         
       } else {
         // Use sample data for local development or GitHub Pages
+        console.log('Using sample data - not on Netlify');
         const marineUrl = `https://forecast.weather.gov/shmrn.php?mz=${selectedZone.toLowerCase()}&syn=${selectedMarineZone.synopsis_zone.toLowerCase()}`;
         setError(`Demo mode: Would fetch from ${marineUrl}. Deploy to Netlify for real data.`);
         
