@@ -10,6 +10,12 @@
 [functions]
   directory = "netlify/functions"
 
+# Disable automatic Next.js plugin
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    disable = true
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

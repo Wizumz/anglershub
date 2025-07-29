@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import LocationSelector from '@/components/LocationSelector';
-import DateSelector from '@/components/DateSelector';
-import ForecastDisplay from '@/components/ForecastDisplay';
+import LocationSelector from '../components/LocationSelector';
+import DateSelector from '../components/DateSelector';
+import ForecastDisplay from '../components/ForecastDisplay';
 
 interface WeatherForecast {
   date: string;

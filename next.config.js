@@ -5,9 +5,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Only use basePath for GitHub Pages, not for Netlify
-  basePath: process.env.NETLIFY ? '' : (process.env.NODE_ENV === 'production' ? '/anglershub' : ''),
-  assetPrefix: process.env.NETLIFY ? '' : (process.env.NODE_ENV === 'production' ? '/anglershub/' : ''),
+  // Simplified path configuration for Netlify
+  basePath: '',
+  assetPrefix: '',
+  distDir: 'out',
 };
 
 module.exports = nextConfig;
