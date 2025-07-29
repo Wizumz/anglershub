@@ -7,6 +7,12 @@ A modern web application that displays NOAA Marine Weather forecasts with a retr
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![Chart.js](https://img.shields.io/badge/Chart.js-4.0-orange)
 
+## 🚀 Live Demo
+
+**[View Live Application on GitHub Pages](https://yourusername.github.io/noaa-marine-weather/)**
+
+*Note: Replace 'yourusername' with your actual GitHub username after deployment*
+
 ## Features
 
 - 🌊 **Real-time Marine Forecasts**: Official NOAA weather data for marine zones
@@ -16,6 +22,7 @@ A modern web application that displays NOAA Marine Weather forecasts with a retr
 - 🗺️ **Zone Selection**: Choose from popular marine zones across the US
 - 📅 **Date Selection**: View forecasts for today + next 6 days
 - ⚡ **Fast Loading**: Optimized Next.js build with static generation
+- 🔄 **Auto-Deploy**: GitHub Actions automatically deploys to GitHub Pages
 
 ## Screenshot
 
@@ -46,6 +53,7 @@ The application includes popular marine zones such as:
 - **Charts**: Chart.js with react-chartjs-2
 - **Date Handling**: date-fns
 - **Data Source**: NOAA Weather Service API
+- **Deployment**: GitHub Pages with GitHub Actions
 
 ## Getting Started
 
@@ -53,12 +61,13 @@ The application includes popular marine zones such as:
 
 - Node.js 18.0 or later
 - npm or yarn package manager
+- Git for version control
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/noaa-marine-weather.git
 cd noaa-marine-weather
 ```
 
@@ -85,54 +94,51 @@ npm run build
 npm run start
 ```
 
-## API Endpoints
+## 🚀 Deployment to GitHub Pages
 
-### `/api/marine-zones`
-Returns available marine zones for selection.
+This project is configured for automatic deployment to GitHub Pages using GitHub Actions.
 
-**Response:**
-```json
-{
-  "success": true,
-  "zones": [
-    {
-      "zone_code": "ANZ335",
-      "location_name": "Boston Harbor and Massachusetts Bay",
-      "synopsis_zone": "ANZ300"
-    }
-  ],
-  "total": 8
-}
+### Setup Instructions
+
+1. **Fork or Clone** this repository to your GitHub account
+
+2. **Enable GitHub Pages** in your repository:
+   - Go to Repository Settings → Pages
+   - Source: "GitHub Actions"
+   - The workflow will automatically deploy on push to main branch
+
+3. **Update Repository Name** (if different):
+   - Edit `next.config.ts` and update the `basePath` and `assetPrefix` to match your repository name
+   - Update the demo link in this README
+
+4. **Push Changes**:
+```bash
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin main
 ```
 
-### `/api/forecast?zone={ZONE_CODE}&date={DATE}`
-Returns weather forecast for specified zone and date.
+5. **Access Your Site**:
+   - Your site will be available at: `https://yourusername.github.io/repository-name/`
+   - Check the Actions tab for deployment status
 
-**Parameters:**
-- `zone`: Marine zone code (e.g., ANZ335)
-- `date`: Start date in YYYY-MM-DD format (optional)
+### GitHub Actions Workflow
 
-**Response:**
-```json
-{
-  "success": true,
-  "zone": "ANZ335",
-  "forecasts": [
-    {
-      "date": "2024-01-01T06:00:00.000Z",
-      "temperature": 72,
-      "windSpeed": 12,
-      "windDirection": "SW",
-      "waveHeight": 2.5,
-      "description": "Partly Cloudy",
-      "detailedForecast": "Marine conditions for ANZ335..."
-    }
-  ],
-  "total": 8
-}
-```
+The deployment workflow (`.github/workflows/deploy.yml`) automatically:
+- Builds the Next.js application for static export
+- Uploads the build artifacts to GitHub Pages
+- Deploys the site on every push to the main branch
 
-## Data Processing
+## API Integration
+
+### NOAA Weather Service API
+
+The application attempts to fetch real-time data from the NOAA Weather Service API:
+- **Endpoint**: `https://api.weather.gov/zones/forecast/{ZONE_CODE}/forecast`
+- **Fallback**: Sample data is used when the API is unavailable or blocked by CORS
+- **Note**: Browser CORS policies may prevent direct API access; consider using a proxy for production
+
+### Data Processing
 
 The application processes NOAA weather data by:
 
@@ -140,7 +146,7 @@ The application processes NOAA weather data by:
 2. **Parsing Marine Forecasts**: Extracts wind, wave, and temperature data
 3. **Text Analysis**: Uses regex to extract specific marine conditions
 4. **Fallback Data**: Provides sample data if NOAA API is unavailable
-5. **Caching**: Optimizes API calls for better performance
+5. **Client-Side Processing**: All data processing happens in the browser for GitHub Pages compatibility
 
 ## Marine Zone Scraper
 
@@ -178,7 +184,7 @@ colors: {
 
 ### Adding More Marine Zones
 
-To add more zones, update the `sampleZones` array in `/api/marine-zones/route.ts` or implement the full NOAA zones API integration.
+To add more zones, update the `MARINE_ZONES` array in `src/app/page.tsx` or implement dynamic zone loading.
 
 ## Development
 
@@ -187,16 +193,17 @@ To add more zones, update the `sampleZones` array in `/api/marine-zones/route.ts
 ```
 src/
 ├── app/
-│   ├── api/
-│   │   ├── forecast/route.ts      # Weather forecast API
-│   │   └── marine-zones/route.ts  # Marine zones API
 │   ├── globals.css                # Terminal styling
+│   ├── layout.tsx                 # App layout
 │   └── page.tsx                   # Main application
 ├── components/
 │   ├── DateSelector.tsx           # Date selection component
 │   ├── ForecastDisplay.tsx        # Detailed forecast display
 │   ├── LocationSelector.tsx       # Zone selection component
 │   └── WeatherChart.tsx          # Chart.js visualization
+├── .github/workflows/
+│   └── deploy.yml                 # GitHub Pages deployment
+├── out/                           # Static export output
 └── marine_zones_scraper.py        # Python zone scraper
 ```
 
@@ -223,6 +230,18 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Weather data provided by the National Weather Service (NOAA). This application is not affiliated with NOAA and is for educational/personal use only.
 
+## Troubleshooting
+
+### Common Issues
+
+1. **CORS Errors**: The NOAA API may be blocked by browser CORS policies. The app will automatically fall back to sample data.
+
+2. **GitHub Pages 404**: Ensure the repository name in `next.config.ts` matches your actual repository name.
+
+3. **Build Failures**: Check that all dependencies are properly installed and Node.js version is 18+.
+
+4. **Styling Issues**: Verify that Tailwind CSS is properly configured and the custom color scheme is loaded.
+
 ## Future Enhancements
 
 - 🌊 Tide data integration
@@ -232,6 +251,7 @@ Weather data provided by the National Weather Service (NOAA). This application i
 - 💾 Favorite zones and offline caching
 - 📧 Email/SMS forecast alerts
 - 🌍 International marine weather support
+- 🔐 CORS proxy for direct NOAA API access
 
 ---
 

@@ -23,32 +23,86 @@ interface MarineZone {
   synopsis_zone: string;
 }
 
+// Static marine zones data for GitHub Pages deployment
+const MARINE_ZONES: MarineZone[] = [
+  {
+    zone_code: 'ANZ335',
+    location_name: 'Boston Harbor and Massachusetts Bay',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ338',
+    location_name: 'Cape Cod Bay',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ230',
+    location_name: 'Long Island Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'AMZ350',
+    location_name: 'Delaware Bay',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ354',
+    location_name: 'Chesapeake Bay',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'GMZ876',
+    location_name: 'Tampa Bay',
+    synopsis_zone: 'GMZ800'
+  },
+  {
+    zone_code: 'PMZ153',
+    location_name: 'San Francisco Bay',
+    synopsis_zone: 'PMZ100'
+  },
+  {
+    zone_code: 'PMZ156',
+    location_name: 'Monterey Bay',
+    synopsis_zone: 'PMZ100'
+  }
+];
+
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [selectedZone, setSelectedZone] = useState<string>('');
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
-  const [zones, setZones] = useState<MarineZone[]>([]);
+  const [zones] = useState<MarineZone[]>(MARINE_ZONES);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Fetch marine zones on component mount
+  // Set initial zone
   useEffect(() => {
-    const fetchZones = async () => {
-      try {
-        const response = await fetch('/api/marine-zones');
-        const data = await response.json();
-        if (data.success) {
-          setZones(data.zones);
-          if (data.zones.length > 0) {
-            setSelectedZone(data.zones[0].zone_code);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch zones:', err);
-        setError('Failed to load marine zones');
-      }
-    };
-    fetchZones();
+    if (zones.length > 0) {
+      setSelectedZone(zones[0].zone_code);
+    }
+  }, [zones]);
+
+  const generateSampleForecast = useCallback((zoneCode: string, startDate?: string | null): WeatherForecast[] => {
+    const baseDate = startDate ? new Date(startDate) : new Date();
+    const forecasts: WeatherForecast[] = [];
+    
+    for (let i = 0; i < 8; i++) {
+      const date = new Date(baseDate);
+      date.setDate(date.getDate() + Math.floor(i / 2));
+      date.setHours(i % 2 === 0 ? 6 : 18, 0, 0, 0);
+      
+      forecasts.push({
+        date: date.toISOString(),
+        temperature: 65 + Math.random() * 20,
+        windSpeed: 8 + Math.random() * 15,
+        windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)],
+        waveHeight: 1 + Math.random() * 4,
+        description: i % 2 === 0 ? 'Partly Cloudy' : 'Clear',
+        detailedForecast: `Marine conditions for ${zoneCode}. ${i % 2 === 0 ? 'Morning' : 'Evening'} forecast with moderate seas.`
+      });
+    }
+    
+    return forecasts;
   }, []);
 
   const fetchForecast = useCallback(async () => {
@@ -58,21 +112,76 @@ export default function Home() {
     setError('');
     
     try {
-      const response = await fetch(`/api/forecast?zone=${selectedZone}&date=${selectedDate}`);
-      const data = await response.json();
+      // Try to fetch from NOAA API directly (this may fail due to CORS in browser)
+      const noaaUrl = `https://api.weather.gov/zones/forecast/${selectedZone}/forecast`;
       
-      if (data.success) {
-        setForecasts(data.forecasts);
+      const response = await fetch(noaaUrl, {
+        headers: {
+          'User-Agent': '(NOAA Marine Weather App, contact@example.com)'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Parse the forecast data
+        const noaaForecasts: WeatherForecast[] = [];
+        const periods = data.properties?.periods || [];
+
+        for (let i = 0; i < Math.min(periods.length, 8); i++) {
+          const period = periods[i];
+          noaaForecasts.push({
+            date: period.startTime,
+            temperature: period.temperature || 70,
+            windSpeed: extractWindSpeed(period.detailedForecast || ''),
+            windDirection: extractWindDirection(period.detailedForecast || ''),
+            waveHeight: extractWaveHeight(period.detailedForecast || ''),
+            description: period.shortForecast || '',
+            detailedForecast: period.detailedForecast || ''
+          });
+        }
+
+        setForecasts(noaaForecasts);
       } else {
-        setError(data.error || 'Failed to fetch forecast');
+        throw new Error('NOAA API not available');
       }
-    } catch (err) {
-      console.error('Failed to fetch forecast:', err);
-      setError('Failed to load weather forecast');
+    } catch (error) {
+      console.log('Using sample data due to CORS or API unavailability');
+      
+      // Use sample data for GitHub Pages deployment
+      const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
+      setForecasts(sampleForecasts);
+      setError('Demo mode: Using sample data (NOAA API requires CORS proxy for browser access)');
     } finally {
       setLoading(false);
     }
-  }, [selectedZone, selectedDate]);
+  }, [selectedZone, selectedDate, generateSampleForecast]);
+
+  // Helper functions for parsing NOAA data
+  const extractWindSpeed = (text: string): number => {
+    const windMatch = text.match(/winds?\s+(\d+)(?:-(\d+))?\s*(?:to\s*(\d+))?\s*(?:mph|knots|kts)/i);
+    if (windMatch) {
+      const speed1 = parseInt(windMatch[1]);
+      const speed2 = windMatch[2] ? parseInt(windMatch[2]) : speed1;
+      return Math.round((speed1 + speed2) / 2);
+    }
+    return 10; // default
+  };
+
+  const extractWindDirection = (text: string): string => {
+    const dirMatch = text.match(/(north|south|east|west|northeast|northwest|southeast|southwest|variable)/i);
+    return dirMatch ? dirMatch[1].toUpperCase() : 'VARIABLE';
+  };
+
+  const extractWaveHeight = (text: string): number => {
+    const waveMatch = text.match(/waves?\s+(\d+)(?:-(\d+))?\s*(?:to\s*(\d+))?\s*(?:feet|ft)/i);
+    if (waveMatch) {
+      const height1 = parseInt(waveMatch[1]);
+      const height2 = waveMatch[2] ? parseInt(waveMatch[2]) : height1;
+      return Math.round((height1 + height2) / 2);
+    }
+    return 2; // default
+  };
 
   // Fetch forecast when zone or date changes
   useEffect(() => {
@@ -125,8 +234,8 @@ export default function Home() {
       {/* Error Display */}
       {error && (
         <div className="border border-terminal-error bg-terminal-bg-alt p-4 rounded mb-6">
-          <div className="text-terminal-error">
-            <span className="font-bold">ERROR:</span> {error}
+          <div className="text-terminal-warning">
+            <span className="font-bold">INFO:</span> {error}
           </div>
         </div>
       )}
@@ -166,7 +275,7 @@ export default function Home() {
       <footer className="mt-8 pt-4 border-t border-terminal-border text-terminal-muted text-center">
         <div>Data source: National Weather Service / NOAA</div>
         <div className="mt-1">
-          <span className="text-terminal-success">{'>'}</span> Terminal interface v1.0
+          <span className="text-terminal-success">{'>'}</span> Terminal interface v1.0 - GitHub Pages Demo
         </div>
       </footer>
     </div>
