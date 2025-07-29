@@ -401,10 +401,29 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <footer className="mt-8 pt-4 border-t border-terminal-border text-terminal-muted text-center">
-        <div>Data source: National Weather Service / NOAA</div>
-        <div className="mt-1">
-          <span className="text-terminal-success">{'>'}</span> Terminal interface v1.0 - GitHub Pages Demo
+      <footer className="mt-8 pt-6 border-t border-terminal-fg/20 text-center text-sm text-terminal-muted">
+        <div className="mb-3">
+          Created by{' '}
+          <a 
+            href="https://www.instagram.com/wizumz/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-terminal-accent hover:text-terminal-success underline"
+          >
+            Wizumz
+          </a>
+          {' '}© 2025 -- consider supporting by{' '}
+          <a 
+            href="https://buymeacoffee.com/newenglandfishingreport" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-terminal-accent hover:text-terminal-success underline"
+          >
+            buying me a coffee
+          </a>
+        </div>
+        <div className="text-xs text-terminal-muted/80">
+          Seas are reported as significant wave height, which is the average of the highest third of the waves. Individual wave heights may be more than twice the significant wave height.
         </div>
       </footer>
     </div>
