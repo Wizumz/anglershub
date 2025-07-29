@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
 
 :root {
@@ -7,12 +9,6 @@
   --accent: #00ffff;
   --muted: #808080;
   --border: #333333;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-mono: 'JetBrains Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
 }
 
 * {
@@ -27,7 +23,7 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-mono);
+  font-family: 'JetBrains Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.4;
 }
