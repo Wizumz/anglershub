@@ -67,6 +67,7 @@ export default function ForecastDisplay({ forecasts, selectedZone }: ForecastDis
                   className={`flex items-center gap-2 ${
                     forecast.summary.color === 'red' ? 'text-red-400' :
                     forecast.summary.color === 'blue' ? 'text-blue-400' :
+                    forecast.summary.color === 'yellow' ? 'text-yellow-400' :
                     forecast.summary.color === 'green' ? 'text-green-400' :
                     'text-terminal-fg'
                   } ${forecast.summary.bold ? 'font-bold' : ''}`}

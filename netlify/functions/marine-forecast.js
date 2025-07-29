@@ -68,13 +68,13 @@ exports.handler = async (event, context) => {
           waveDetail: '',
           thunderstorms: 'Slight chance of tstms in the afternoon',
           visibility: '',
-          description: 'Partly cloudy',
+          description: 'Chance of tstms',
           summary: {
-            type: 'good',
-            icon: '⛵',
-            text: "She's a Beaut",
-            color: 'green',
-            bold: false
+            type: 'danger',
+            icon: '⛈️',
+            text: 'THUNDERSTORMS',
+            color: 'red',
+            bold: true
           }
         }
       ];
@@ -428,24 +428,46 @@ function generateSummary(forecastText, winds, seas, waveDetail) {
   if (text.includes('small craft') || text.includes('advisory')) {
     return {
       type: 'warning',
-      icon: '⚠️',
+      icon: '🚨',
       text: 'SMALL CRAFT ADVISORY',
       color: 'red',
       bold: true
     };
   }
   
-  // 2. Extract numeric values for analysis
+  // 2. Check for Thunderstorms (very high priority - dangerous regardless of other conditions)
+  if (text.includes('tstms') || text.includes('thunderstorms') || text.includes('thunderstorm')) {
+    return {
+      type: 'danger',
+      icon: '⛈️',
+      text: 'THUNDERSTORMS',
+      color: 'red',
+      bold: true
+    };
+  }
+  
+  // 3. Check for other severe weather
+  if (text.includes('gale') || text.includes('storm warning')) {
+    return {
+      type: 'danger',
+      icon: '🌪️',
+      text: 'STORM WARNING',
+      color: 'red',
+      bold: true
+    };
+  }
+  
+  // 4. Extract numeric values for analysis
   const seasHeight = extractNumericValue(seas);
   const windSpeed = extractWindSpeed(winds);
   const waveHeightFromDetail = extractNumericValue(waveDetail);
   const wavePeriod = extractWavePeriod(waveDetail);
   
-  // 3. Check for high seas (>3ft)
+  // 5. Check for high seas (>3ft)
   if (seasHeight > 3 || waveHeightFromDetail > 3) {
     const height = Math.max(seasHeight, waveHeightFromDetail);
     
-    // 4. Check steep wave conditions (period < 2x height)
+    // 6. Check steep wave conditions (period < 2x height)
     if (wavePeriod > 0 && wavePeriod < (height * 2)) {
       return {
         type: 'danger',
@@ -465,7 +487,7 @@ function generateSummary(forecastText, winds, seas, waveDetail) {
     };
   }
   
-  // 5. Check for high winds (>15kt)
+  // 7. Check for high winds (>15kt)
   if (windSpeed > 15) {
     return {
       type: 'windy',
@@ -476,7 +498,28 @@ function generateSummary(forecastText, winds, seas, waveDetail) {
     };
   }
   
-  // 6. Good conditions - fun messages
+  // 8. Check for moderate weather concerns
+  if (text.includes('rain') || text.includes('showers')) {
+    return {
+      type: 'weather',
+      icon: '🌧️',
+      text: 'RAIN/SHOWERS',
+      color: 'yellow',
+      bold: false
+    };
+  }
+  
+  if (text.includes('fog') || text.includes('mist')) {
+    return {
+      type: 'visibility',
+      icon: '🌫️',
+      text: 'FOG/MIST',
+      color: 'yellow',
+      bold: false
+    };
+  }
+  
+  // 9. Good conditions - fun messages
   const goodMessages = [
     'Safe boating',
     "She's a Beaut",
@@ -484,7 +527,9 @@ function generateSummary(forecastText, winds, seas, waveDetail) {
     'Hell yeah',
     'Perfect conditions',
     'Get out there!',
-    'Smooth sailing'
+    'Smooth sailing',
+    'Prime time',
+    'Beautiful day'
   ];
   
   const randomMessage = goodMessages[Math.floor(Math.random() * goodMessages.length)];
