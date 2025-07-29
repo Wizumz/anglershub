@@ -54,8 +54,8 @@ exports.handler = async (event, context) => {
           description: 'Clear',
           summary: {
             type: 'good',
-            icon: '⛵',
-            text: 'Safe boating',
+            icon: '🌞',
+            text: "Sun's Out, Sails Up!",
             color: 'green',
             bold: false
           }
@@ -63,18 +63,18 @@ exports.handler = async (event, context) => {
         {
           date: new Date().toISOString(),
           period: 'TOMORROW',
-          winds: 'NE around 5 kt',
-          seas: '1 ft or less',
+          winds: 'NE 15 to 18 kt',
+          seas: '2 to 3 ft',
           waveDetail: '',
-          thunderstorms: 'Slight chance of tstms in the afternoon',
+          thunderstorms: '',
           visibility: '',
-          description: 'Chance of tstms',
+          description: 'Partly cloudy',
           summary: {
-            type: 'danger',
-            icon: '⛈️',
-            text: 'THUNDERSTORMS',
-            color: 'red',
-            bold: true
+            type: 'moderate',
+            icon: '💨',
+            text: 'Breezy but Doable, Sailor!',
+            color: 'blue',
+            bold: false
           }
         }
       ];
@@ -424,122 +424,137 @@ function extractWeatherConditions(text) {
 function generateSummary(forecastText, winds, seas, waveDetail) {
   const text = forecastText.toLowerCase();
   
-  // 1. Check for Small Craft Advisory (highest priority)
-  if (text.includes('small craft') || text.includes('advisory')) {
-    return {
-      type: 'warning',
-      icon: '🚨',
-      text: 'SMALL CRAFT ADVISORY',
-      color: 'red',
-      bold: true
-    };
-  }
-  
-  // 2. Check for Thunderstorms (very high priority - dangerous regardless of other conditions)
-  if (text.includes('tstms') || text.includes('thunderstorms') || text.includes('thunderstorm')) {
-    return {
-      type: 'danger',
-      icon: '⛈️',
-      text: 'THUNDERSTORMS',
-      color: 'red',
-      bold: true
-    };
-  }
-  
-  // 3. Check for other severe weather
-  if (text.includes('gale') || text.includes('storm warning')) {
-    return {
-      type: 'danger',
-      icon: '🌪️',
-      text: 'STORM WARNING',
-      color: 'red',
-      bold: true
-    };
-  }
-  
-  // 4. Extract numeric values for analysis
-  const seasHeight = extractNumericValue(seas);
+  // Extract numeric values for comprehensive analysis
+  const seasHeight = Math.max(extractNumericValue(seas), extractNumericValue(waveDetail));
   const windSpeed = extractWindSpeed(winds);
-  const waveHeightFromDetail = extractNumericValue(waveDetail);
-  const wavePeriod = extractWavePeriod(waveDetail);
   
-  // 5. Check for high seas (>3ft)
-  if (seasHeight > 3 || waveHeightFromDetail > 3) {
-    const height = Math.max(seasHeight, waveHeightFromDetail);
-    
-    // 6. Check steep wave conditions (period < 2x height)
-    if (wavePeriod > 0 && wavePeriod < (height * 2)) {
-      return {
-        type: 'danger',
-        icon: '🌊',
-        text: `STEEP WAVES: ${height}ft @ ${wavePeriod}s`,
-        color: 'red',
-        bold: true
-      };
-    }
-    
-    return {
-      type: 'caution',
-      icon: '⚠️',
-      text: `HIGH SEAS: ${height}ft`,
-      color: 'red',
-      bold: false
-    };
+  // DANGEROUS CONDITIONS (RED) - Highest Priority
+  // Wind speed > 20 kt OR seas > 3 ft OR weather includes rain, storms, or fog
+  
+  // Check for severe weather first (overrides all other conditions)
+  if (text.includes('small craft') || text.includes('advisory') || text.includes('gale') || text.includes('storm warning')) {
+    return selectRandomMessage('danger', 'advisory');
   }
   
-  // 7. Check for high winds (>15kt)
-  if (windSpeed > 15) {
-    return {
-      type: 'windy',
-      icon: '💨',
-      text: `WINDY: ${windSpeed}kt`,
-      color: 'blue',
-      bold: true
-    };
+  if (text.includes('tstms') || text.includes('thunderstorms') || text.includes('thunderstorm')) {
+    return selectRandomMessage('danger', 'storm');
   }
   
-  // 8. Check for moderate weather concerns
   if (text.includes('rain') || text.includes('showers')) {
-    return {
-      type: 'weather',
-      icon: '🌧️',
-      text: 'RAIN/SHOWERS',
-      color: 'yellow',
-      bold: false
-    };
+    return selectRandomMessage('danger', 'rain');
   }
   
   if (text.includes('fog') || text.includes('mist')) {
-    return {
-      type: 'visibility',
-      icon: '🌫️',
-      text: 'FOG/MIST',
-      color: 'yellow',
-      bold: false
-    };
+    return selectRandomMessage('danger', 'fog');
   }
   
-  // 9. Good conditions - fun messages
-  const goodMessages = [
-    'Safe boating',
-    "She's a Beaut",
-    'Pick this day',
-    'Hell yeah',
-    'Perfect conditions',
-    'Get out there!',
-    'Smooth sailing',
-    'Prime time',
-    'Beautiful day'
-  ];
+  // Check numeric thresholds for dangerous conditions
+  if (windSpeed > 20 || seasHeight > 3) {
+    if (windSpeed > 20 && seasHeight > 3) {
+      return selectRandomMessage('danger', 'both');
+    } else if (windSpeed > 20) {
+      return selectRandomMessage('danger', 'wind');
+    } else {
+      return selectRandomMessage('danger', 'seas');
+    }
+  }
   
-  const randomMessage = goodMessages[Math.floor(Math.random() * goodMessages.length)];
+  // MODERATE CONDITIONS (BLUE)
+  // Wind speed 11–20 kt OR seas 2–3 ft OR weather is cloudy but not stormy
+  if (windSpeed >= 11 && windSpeed <= 20) {
+    return selectRandomMessage('moderate', 'windy');
+  }
+  
+  if (seasHeight >= 2 && seasHeight <= 3) {
+    return selectRandomMessage('moderate', 'choppy');
+  }
+  
+  if (text.includes('cloudy') || text.includes('overcast') || text.includes('partly')) {
+    return selectRandomMessage('moderate', 'cloudy');
+  }
+  
+  // GOOD CONDITIONS (GREEN)
+  // Wind speed <= 10 kt, seas <= 2 ft, weather is clear or partly cloudy
+  return selectRandomMessage('good', 'perfect');
+}
+
+function selectRandomMessage(category, subtype) {
+  const messages = {
+    danger: {
+      advisory: [
+        { icon: '🚨', text: 'Red Alert: Seas Are Angry!', color: 'red', bold: true },
+        { icon: '⚓', text: 'Rough Day, Keep it Tied!', color: 'red', bold: true },
+        { icon: '🌪️', text: 'Gale Force, Anchor Down!', color: 'red', bold: true }
+      ],
+      storm: [
+        { icon: '⚡', text: "Storm's Brewing, Stay Ashore!", color: 'red', bold: true },
+        { icon: '🌀', text: "Hold Fast, It's a Wild Ride!", color: 'red', bold: true }
+      ],
+      rain: [
+        { icon: '🌧️', text: 'Rain and Waves, Take a Break!', color: 'red', bold: true },
+        { icon: '🌊', text: 'Churning Waters, Stay Safe!', color: 'red', bold: true }
+      ],
+      fog: [
+        { icon: '🌫️', text: 'Fog and Fury, Best Stay Put!', color: 'red', bold: true }
+      ],
+      wind: [
+        { icon: '💨', text: 'IS GONNA BLOW! Batten Down!', color: 'red', bold: true },
+        { icon: '🌪️', text: 'Gale Force, Anchor Down!', color: 'red', bold: true }
+      ],
+      seas: [
+        { icon: '🌊', text: 'LOTTA CHOP: Rough Seas Ahead!', color: 'red', bold: true },
+        { icon: '🌊', text: 'Churning Waters, Stay Safe!', color: 'red', bold: true }
+      ],
+      both: [
+        { icon: '🌀', text: "Hold Fast, It's a Wild Ride!", color: 'red', bold: true },
+        { icon: '🚨', text: 'Red Alert: Seas Are Angry!', color: 'red', bold: true }
+      ]
+    },
+    moderate: {
+      windy: [
+        { icon: '💨', text: 'Breezy but Doable, Sailor!', color: 'blue', bold: false },
+        { icon: '🌬️', text: "Wind's Kicking, Hold Tight!", color: 'blue', bold: false },
+        { icon: '🌀', text: 'Swirling Winds, Keep it Cool!', color: 'blue', bold: false },
+        { icon: '🌪️', text: 'Bit Gusty, Trim Those Sails!', color: 'blue', bold: false },
+        { icon: '🐳', text: 'Whale of a Breeze Out There!', color: 'blue', bold: false }
+      ],
+      choppy: [
+        { icon: '🌊', text: 'Bit of a Chop, Stay Steady!', color: 'blue', bold: false },
+        { icon: '⛵', text: 'Sails Up, Guts Up!', color: 'blue', bold: false },
+        { icon: '⚓', text: 'Ride the Waves, Skipper!', color: 'blue', bold: false },
+        { icon: '🚢', text: 'Steady as She Goes!', color: 'blue', bold: false }
+      ],
+      cloudy: [
+        { icon: '🌥️', text: 'Clouds Above, Adventure Ahead!', color: 'blue', bold: false },
+        { icon: '⛵', text: 'Sails Up, Guts Up!', color: 'blue', bold: false }
+      ]
+    },
+    good: {
+      perfect: [
+        { icon: '⛵', text: "She's a Beaut, Captain!", color: 'green', bold: false },
+        { icon: '🌞', text: "Sun's Out, Sails Up!", color: 'green', bold: false },
+        { icon: '🐬', text: 'Dolphin-Approved Boating Day!', color: 'green', bold: false },
+        { icon: '🌴', text: 'Smooth as a Tropical Breeze!', color: 'green', bold: false },
+        { icon: '⚓', text: 'Drop Anchor, Enjoy the Calm!', color: 'green', bold: false },
+        { icon: '🌊', text: 'Glass Seas, Full Speed!', color: 'green', bold: false },
+        { icon: '😎', text: 'Perfect Day to Cruise!', color: 'green', bold: false },
+        { icon: '🐠', text: "Fish Are Jumpin', Seas Are Flat!", color: 'green', bold: false },
+        { icon: '🌤️', text: 'Clear Skies, Clear Vibes!', color: 'green', bold: false },
+        { icon: '🚤', text: 'Prime Time for a Joyride!', color: 'green', bold: false }
+      ]
+    }
+  };
+  
+  const categoryMessages = messages[category][subtype] || messages[category]['perfect'] || messages.good.perfect;
+  const randomIndex = Math.floor(Math.random() * categoryMessages.length);
+  const selected = categoryMessages[randomIndex];
   
   return {
-    type: 'good',
-    icon: '⛵',
-    text: randomMessage,
-    color: 'green',
-    bold: false
+    type: category,
+    icon: selected.icon,
+    text: selected.text,
+    color: selected.color,
+    bold: selected.bold
   };
 }
 
