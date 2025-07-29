@@ -29,9 +29,35 @@ interface MarineZone {
   synopsis_zone: string;
 }
 
-// Corrected marine zones data from NOAA
+// Complete marine zones data from NOAA
 const MARINE_ZONES: MarineZone[] = [
-  // New England / Boston Area
+  // Maine
+  {
+    zone_code: 'ANZ150',
+    location_name: 'Coastal Waters from Stonington ME to Port Clyde ME out 25 nm',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ151',
+    location_name: 'Penobscot Bay',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ152',
+    location_name: 'Coastal Waters from Port Clyde ME to Cape Elizabeth ME out 25 nm',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ153',
+    location_name: 'Casco Bay',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ154',
+    location_name: 'Coastal Waters from Cape Elizabeth ME to Merrimack River MA out 25 nm',
+    synopsis_zone: 'ANZ100'
+  },
+  // Massachusetts / New England
   {
     zone_code: 'ANZ230',
     location_name: 'Boston Harbor',
@@ -43,8 +69,38 @@ const MARINE_ZONES: MarineZone[] = [
     synopsis_zone: 'ANZ200'
   },
   {
+    zone_code: 'ANZ232',
+    location_name: 'Provincetown MA to Chatham MA to Nantucket Sound out 20 nm',
+    synopsis_zone: 'ANZ200'
+  },
+  {
     zone_code: 'ANZ233',
     location_name: 'Nantucket Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ234',
+    location_name: 'Vineyard Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ235',
+    location_name: 'Rhode Island Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ236',
+    location_name: 'Narragansett Bay',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ237',
+    location_name: 'Block Island Sound',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ250',
+    location_name: 'Coastal waters east of Ipswich Bay and the Stellwagen Bank National Marine Sanctuary',
     synopsis_zone: 'ANZ200'
   },
   {
@@ -52,10 +108,45 @@ const MARINE_ZONES: MarineZone[] = [
     location_name: 'Massachusetts Bay and Ipswich Bay',
     synopsis_zone: 'ANZ200'
   },
+  {
+    zone_code: 'ANZ254',
+    location_name: 'Coastal waters from Provincetown MA to Chatham MA to Nantucket MA out 20 nm',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ255',
+    location_name: 'Coastal Waters extending out to 25 nm South of Marthas Vineyard and Nantucket',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ256',
+    location_name: 'Coastal waters from Montauk NY to Marthas Vineyard out 20 nm',
+    synopsis_zone: 'ANZ200'
+  },
+  {
+    zone_code: 'ANZ270',
+    location_name: 'Waters from Provincetown MA to Chatham MA to Nantucket MA 20-60 nm',
+    synopsis_zone: 'ANZ815'
+  },
+  {
+    zone_code: 'ANZ271',
+    location_name: 'Waters from Montauk NY to Marthas Vineyard 20-60 nm',
+    synopsis_zone: 'ANZ815'
+  },
   // Long Island Sound / New York Area
   {
     zone_code: 'ANZ330',
     location_name: 'Long Island Sound East of New Haven CT/Port Jefferson NY',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ331',
+    location_name: 'Long Island Sound East of New Haven CT/Port Jefferson NY to the Mouth of the Connecticut River',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ332',
+    location_name: 'Long Island Sound East of the Mouth of the Connecticut River',
     synopsis_zone: 'ANZ300'
   },
   {
@@ -73,6 +164,41 @@ const MARINE_ZONES: MarineZone[] = [
     location_name: 'Peconic and Gardiners Bays',
     synopsis_zone: 'ANZ300'
   },
+  {
+    zone_code: 'ANZ345',
+    location_name: 'South Shore Bays from Jones Inlet through Shinnecock Bay',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ350',
+    location_name: 'Moriches Inlet NY to Montauk Point NY out 20 nm',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ353',
+    location_name: 'Fire Island Inlet NY to Moriches Inlet NY out 20 nm',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ355',
+    location_name: 'Sandy Hook NJ to Fire Island Inlet NY out 20 nm',
+    synopsis_zone: 'ANZ300'
+  },
+  {
+    zone_code: 'ANZ370',
+    location_name: 'Waters from Moriches Inlet NY to Montauk Point NY 20-60 nm',
+    synopsis_zone: 'ANZ815'
+  },
+  {
+    zone_code: 'ANZ373',
+    location_name: 'Waters from Fire Island Inlet NY to Moriches Inlet NY 20-60 nm',
+    synopsis_zone: 'ANZ815'
+  },
+  {
+    zone_code: 'ANZ375',
+    location_name: 'Waters from Sandy Hook NJ to Fire Island Inlet NY 20-60 nm',
+    synopsis_zone: 'ANZ815'
+  },
   // New Jersey / Delaware Area
   {
     zone_code: 'ANZ430',
@@ -80,9 +206,64 @@ const MARINE_ZONES: MarineZone[] = [
     synopsis_zone: 'ANZ400'
   },
   {
+    zone_code: 'ANZ431',
+    location_name: 'Delaware Bay waters south of East Point NJ to Slaughter Beach DE',
+    synopsis_zone: 'ANZ400'
+  },
+  {
     zone_code: 'ANZ450',
     location_name: 'Coastal waters from Sandy Hook to Manasquan Inlet NJ out 20 nm',
     synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ451',
+    location_name: 'Coastal waters from Manasquan Inlet to Little Egg Inlet NJ out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ452',
+    location_name: 'Coastal waters from Little Egg Inlet to Great Egg Inlet NJ out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ453',
+    location_name: 'Coastal waters from Great Egg Inlet to Cape May NJ out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ454',
+    location_name: 'Coastal waters from Cape May NJ to Cape Henlopen DE out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ455',
+    location_name: 'Coastal waters from Cape Henlopen to Fenwick Island DE out 20 nm',
+    synopsis_zone: 'ANZ400'
+  },
+  {
+    zone_code: 'ANZ470',
+    location_name: 'Waters from Sandy Hook to Manasquan Inlet NJ 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ471',
+    location_name: 'Waters from Manasquan Inlet to Little Egg Inlet NJ 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ472',
+    location_name: 'Waters from Little Egg Inlet to Great Egg Inlet NJ 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ473',
+    location_name: 'Waters from Great Egg Inlet to Cape May NJ 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ475',
+    location_name: 'Waters from Cape May NJ to Cape Henlopen DE 20-60 nm',
+    synopsis_zone: 'ANZ820'
   },
   // Chesapeake Bay / Virginia Area
   {
@@ -91,9 +272,74 @@ const MARINE_ZONES: MarineZone[] = [
     synopsis_zone: 'ANZ600'
   },
   {
+    zone_code: 'ANZ631',
+    location_name: 'Chesapeake Bay from Windmill Point to New Point Comfort VA',
+    synopsis_zone: 'ANZ600'
+  },
+  {
     zone_code: 'ANZ632',
     location_name: 'Chesapeake Bay from New Point Comfort to Little Creek VA',
     synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ633',
+    location_name: 'Currituck Sound',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ634',
+    location_name: 'Chesapeake Bay from Little Creek VA to Cape Henry VA',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ650',
+    location_name: 'Coastal waters from Fenwick Island DE to Chincoteague VA out 20 nm',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ652',
+    location_name: 'Coastal waters from Chincoteague to Parramore Island VA out 20 nm',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ654',
+    location_name: 'Coastal waters from Parramore Island to Cape Charles Light VA out 20 nm',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ656',
+    location_name: 'Coastal waters from Cape Charles Light to VA/NC border out 20 nm',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ658',
+    location_name: 'Coastal waters from NC/VA border to Currituck Beach Light NC out 20 nm',
+    synopsis_zone: 'ANZ600'
+  },
+  {
+    zone_code: 'ANZ670',
+    location_name: 'Waters from Fenwick Island DE to Chincoteague VA 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ671',
+    location_name: 'Waters from Chincoteague to Parramore Island VA 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ672',
+    location_name: 'Waters from Parramore Island to Cape Charles Light VA 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ673',
+    location_name: 'Waters from Cape Charles Light to VA/NC border 20-60 nm',
+    synopsis_zone: 'ANZ820'
+  },
+  {
+    zone_code: 'ANZ675',
+    location_name: 'Waters from NC/VA border to Currituck Beach Light NC 20-60 nm',
+    synopsis_zone: 'ANZ820'
   },
   // North Carolina Area
   {
@@ -102,9 +348,84 @@ const MARINE_ZONES: MarineZone[] = [
     synopsis_zone: 'ANZ100'
   },
   {
+    zone_code: 'ANZ131',
+    location_name: 'Alligator River',
+    synopsis_zone: 'ANZ100'
+  },
+  {
     zone_code: 'ANZ135',
     location_name: 'Pamlico Sound',
     synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ136',
+    location_name: 'Pamlico and Pungo Rivers',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ137',
+    location_name: 'Neuse and Bay Rivers',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ156',
+    location_name: 'Coastal waters from Ocracoke Inlet to Cape Lookout NC out 20 nm',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'ANZ158',
+    location_name: 'Coastal waters from Cape Lookout to Surf City NC out 20 nm',
+    synopsis_zone: 'ANZ100'
+  },
+  {
+    zone_code: 'AMZ158',
+    location_name: 'Coastal waters from Surf City to Cape Fear NC out 20 nm',
+    synopsis_zone: 'AMZ100'
+  },
+  {
+    zone_code: 'AMZ231',
+    location_name: 'Croatan and Roanoke Sounds',
+    synopsis_zone: 'AMZ100'
+  },
+  {
+    zone_code: 'AMZ250',
+    location_name: 'Coastal waters from Surf City NC to Cape Fear NC out 20 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ252',
+    location_name: 'Coastal waters from Cape Fear NC to Little River Inlet SC out 20 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ254',
+    location_name: 'Coastal waters from Little River Inlet to Murrells Inlet SC out 20 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ256',
+    location_name: 'Coastal waters from Murrells Inlet to South Santee River SC out 20 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ270',
+    location_name: 'Waters from Surf City NC to Cape Fear NC 20-60 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ272',
+    location_name: 'Waters from Cape Fear NC to Little River Inlet SC 20-60 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ274',
+    location_name: 'Waters from Little River Inlet to Murrells Inlet SC 20-60 nm',
+    synopsis_zone: 'AMZ200'
+  },
+  {
+    zone_code: 'AMZ276',
+    location_name: 'Waters from Murrells Inlet to South Santee River SC 20-60 nm',
+    synopsis_zone: 'AMZ200'
   },
   // South Carolina / Georgia Area
   {
@@ -117,15 +438,110 @@ const MARINE_ZONES: MarineZone[] = [
     location_name: 'Coastal waters from South Santee River SC to Edisto Beach SC out 20 nm',
     synopsis_zone: 'AMZ300'
   },
+  {
+    zone_code: 'AMZ352',
+    location_name: 'Coastal waters from Edisto Beach SC to Savannah GA out 20 nm',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ354',
+    location_name: 'Coastal waters from Savannah GA to Altamaha Sound GA out 20 nm',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ370',
+    location_name: 'Waters from South Santee River SC to Edisto Beach SC 20-60 nm',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ372',
+    location_name: 'Waters from Edisto Beach SC to Savannah GA 20-60 nm',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ374',
+    location_name: 'Waters from Savannah GA to Altamaha Sound GA 20-60 nm',
+    synopsis_zone: 'AMZ300'
+  },
+  {
+    zone_code: 'AMZ450',
+    location_name: 'Coastal waters from Altamaha Sound to Fernandina Beach FL out 20 nm',
+    synopsis_zone: 'AMZ400'
+  },
+  {
+    zone_code: 'AMZ452',
+    location_name: 'Coastal waters from Fernandina Beach to St. Augustine FL out 20 nm',
+    synopsis_zone: 'AMZ400'
+  },
+  {
+    zone_code: 'AMZ454',
+    location_name: 'Coastal waters from St. Augustine to Flagler Beach FL out 20 nm',
+    synopsis_zone: 'AMZ400'
+  },
   // Florida East Coast
+  {
+    zone_code: 'AMZ470',
+    location_name: 'Coastal waters from Flagler Beach to Volusia-Brevard County Line FL out 20 nm',
+    synopsis_zone: 'AMZ500'
+  },
+  {
+    zone_code: 'AMZ550',
+    location_name: 'Flagler Beach to Volusia-Brevard County Line 0-20 nm',
+    synopsis_zone: 'AMZ500'
+  },
   {
     zone_code: 'AMZ552',
     location_name: 'Volusia-Brevard County Line to Sebastian Inlet 0-20 nm',
     synopsis_zone: 'AMZ500'
   },
   {
+    zone_code: 'AMZ555',
+    location_name: 'Sebastian Inlet to Jupiter Inlet 0-20 nm',
+    synopsis_zone: 'AMZ500'
+  },
+  {
+    zone_code: 'AMZ570',
+    location_name: 'Flagler Beach to Volusia-Brevard County Line 20-60 nm',
+    synopsis_zone: 'AMZ500'
+  },
+  {
+    zone_code: 'AMZ572',
+    location_name: 'Volusia-Brevard County Line to Sebastian Inlet 20-60 nm',
+    synopsis_zone: 'AMZ500'
+  },
+  {
+    zone_code: 'AMZ575',
+    location_name: 'Sebastian Inlet to Jupiter Inlet 20-60 nm',
+    synopsis_zone: 'AMZ500'
+  },
+  {
+    zone_code: 'AMZ610',
+    location_name: 'Lake Okeechobee',
+    synopsis_zone: 'AMZ101'
+  },
+  {
+    zone_code: 'AMZ630',
+    location_name: 'Biscayne Bay',
+    synopsis_zone: 'AMZ101'
+  },
+  {
     zone_code: 'AMZ650',
     location_name: 'Coastal waters from Jupiter Inlet to Deerfield Beach FL out 20 nm',
+    synopsis_zone: 'AMZ101'
+  },
+  {
+    zone_code: 'AMZ651',
+    location_name: 'Coastal waters from Deerfield Beach to Ocean Reef FL out 20 nm',
+    synopsis_zone: 'AMZ101'
+  },
+  {
+    zone_code: 'AMZ670',
+    location_name: 'Waters from Jupiter Inlet to Deerfield Beach FL 20-60 nm',
+    synopsis_zone: 'AMZ101'
+  },
+  {
+    zone_code: 'AMZ671',
+    location_name: 'Waters from Deerfield Beach to Ocean Reef FL 20-60 nm',
     synopsis_zone: 'AMZ101'
   }
 ];
