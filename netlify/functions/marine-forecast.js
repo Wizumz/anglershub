@@ -121,27 +121,21 @@ function parseMarineForecast(html) {
       }
     }
 
-    // More comprehensive forecast extraction
-    // Try different patterns for marine forecasts
-    const forecastPatterns = [
-      // Pattern 1: Bold period headers
-      /<b[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^<]*)<\/b>\s*[:\-\s]*([^<]*(?:<br[^>]*>[^<]*)*)/gi,
-      // Pattern 2: Table-based structure
-      /<td[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^<]*)<\/td>\s*<td[^>]*>([^<]*)<\/td>/gi,
-      // Pattern 3: Paragraph-based
-      /<p[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^<]*)[:\-\s]*([^<]*)<\/p>/gi
-    ];
-
-    let foundForecasts = false;
+    // Updated parsing for NOAA's actual structure
+    // Look for the forecast content in the pre-formatted div
+    const preFormatDiv = html.match(/<div[^>]*white-space:\s*pre-wrap[^>]*>(.*?)<\/div>/is);
     
-    for (let patternIndex = 0; patternIndex < forecastPatterns.length && !foundForecasts; patternIndex++) {
-      const pattern = forecastPatterns[patternIndex];
-      console.log(`Trying forecast pattern ${patternIndex + 1}...`);
+    if (preFormatDiv) {
+      const forecastContent = preFormatDiv[1];
+      console.log('Found forecast content div');
+      
+      // Pattern for NOAA periods: <strong><font...>PERIOD</font></strong> followed by text
+      const periodPattern = /<strong><font[^>]*>(.*?)<\/font><\/strong>\s*(.*?)(?=<strong><font|$)/gs;
       
       let match;
-      while ((match = pattern.exec(html)) !== null) {
-        const period = match[1].trim();
-        let forecastText = match[2].replace(/<br[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').trim();
+      while ((match = periodPattern.exec(forecastContent)) !== null) {
+        const period = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+        const forecastText = match[2].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
         
         if (period.length > 0 && forecastText.length > 0) {
           console.log(`Found forecast: ${period} -> ${forecastText.substring(0, 100)}...`);
@@ -162,47 +156,65 @@ function parseMarineForecast(html) {
             waveDetail,
             thunderstorms,
             visibility,
-            description: description || forecastText.substring(0, 100) + '...'
+            description: description || forecastText.substring(0, 200)
           });
-          
-          foundForecasts = true;
         }
       }
-      
-      // Reset regex for next pattern
-      pattern.lastIndex = 0;
     }
 
-    // If no forecasts found, try a fallback approach
+    // If no forecasts found with pre-formatted div, try fallback patterns
     if (forecasts.length === 0) {
-      console.log('No forecasts found with standard patterns, trying fallback...');
+      console.log('No forecasts found in pre-formatted div, trying fallback patterns...');
       
-      // Look for any text containing weather-related terms
-      const weatherKeywords = ['wind', 'seas', 'wave', 'knot', 'mph', 'ft', 'visibility'];
-      const lines = html.split(/\n|<br[^>]*>|<\/p>|<\/div>/);
+      // More comprehensive forecast extraction
+      const forecastPatterns = [
+        // Pattern 1: Strong font tags (NOAA format)
+        /<strong><font[^>]*>([^<]*)<\/font><\/strong>\s*(.*?)(?=<strong>|$)/gs,
+        // Pattern 2: Bold period headers
+        /<b[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)[^<]*)<\/b>\s*[:\-\s]*([^<]*(?:<br[^>]*>[^<]*)*)/gi,
+        // Pattern 3: Table-based structure
+        /<td[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^<]*)<\/td>\s*<td[^>]*>([^<]*)<\/td>/gi
+      ];
+
+      let foundForecasts = false;
       
-      for (const line of lines) {
-        const cleanLine = line.replace(/<[^>]*>/g, '').trim();
-        const hasWeatherKeyword = weatherKeywords.some(keyword => 
-          cleanLine.toLowerCase().includes(keyword)
-        );
+      for (let patternIndex = 0; patternIndex < forecastPatterns.length && !foundForecasts; patternIndex++) {
+        const pattern = forecastPatterns[patternIndex];
+        console.log(`Trying forecast pattern ${patternIndex + 1}...`);
         
-        if (hasWeatherKeyword && cleanLine.length > 20) {
-          console.log('Found potential forecast line:', cleanLine.substring(0, 100));
+        let match;
+        while ((match = pattern.exec(html)) !== null) {
+          const period = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+          let forecastText = match[2].replace(/<br[^>]*>/gi, ' ').replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
           
-          forecasts.push({
-            date: new Date().toISOString(),
-            period: 'Forecast Period',
-            winds: extractWinds(cleanLine),
-            seas: extractSeas(cleanLine),
-            waveDetail: extractWaveDetail(cleanLine),
-            thunderstorms: extractThunderstorms(cleanLine),
-            visibility: extractVisibility(cleanLine),
-            description: cleanLine.substring(0, 200)
-          });
-          
-          if (forecasts.length >= 3) break; // Limit fallback results
+          if (period.length > 0 && forecastText.length > 0) {
+            console.log(`Found forecast: ${period} -> ${forecastText.substring(0, 100)}...`);
+            
+            // Parse forecast components
+            const winds = extractWinds(forecastText);
+            const seas = extractSeas(forecastText);
+            const waveDetail = extractWaveDetail(forecastText);
+            const thunderstorms = extractThunderstorms(forecastText);
+            const visibility = extractVisibility(forecastText);
+            const description = extractWeatherDescription(forecastText);
+
+            forecasts.push({
+              date: new Date().toISOString(),
+              period,
+              winds,
+              seas,
+              waveDetail,
+              thunderstorms,
+              visibility,
+              description: description || forecastText.substring(0, 100) + '...'
+            });
+            
+            foundForecasts = true;
+          }
         }
+        
+        // Reset regex for next pattern
+        pattern.lastIndex = 0;
       }
     }
 
@@ -217,35 +229,41 @@ function parseMarineForecast(html) {
 
 // Helper functions to extract specific forecast components
 function extractWinds(text) {
-  const windMatch = text.match(/winds?\s+([^.]*(?:kt|knots?|mph|kts)[^.]*)/i);
-  return windMatch ? windMatch[1].trim() : '';
+  // NOAA format: "SW winds 5 to 10 kt" or "NE winds around 5 kt"
+  const windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.,]*(?:kt|knots?|mph|kts)[^.,]*)/i);
+  return windMatch ? `${windMatch[1]} ${windMatch[2].trim()}` : '';
 }
 
 function extractSeas(text) {
-  const seasMatch = text.match(/seas?\s+([^.]*(?:ft|feet|foot)[^.]*)/i);
+  // NOAA format: "Seas 1 ft or less" or "Seas around 2 ft"
+  const seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
   return seasMatch ? seasMatch[1].trim() : '';
 }
 
 function extractWaveDetail(text) {
-  const waveMatch = text.match(/(?:swell|waves?|period)\s+([^.]*(?:seconds?|ft|feet)[^.]*)/i);
+  // NOAA format: "Wave Detail: E 2 ft at 3 seconds"
+  const waveMatch = text.match(/wave\s+detail:\s*([^.,]*)/i);
   return waveMatch ? waveMatch[1].trim() : '';
 }
 
 function extractThunderstorms(text) {
-  const stormMatch = text.match(/(thunderstorms?[^.]*)/i);
+  // NOAA format: "tstms" or "thunderstorms" 
+  const stormMatch = text.match(/((?:thunderstorms?|tstms?)[^.,]*)/i);
   return stormMatch ? stormMatch[1].trim() : '';
 }
 
 function extractVisibility(text) {
-  const visMatch = text.match(/visibility\s+([^.]*(?:miles?|nm)[^.]*)/i);
+  // NOAA format: "vsby 1 to 3 nm" or "Vsby 1 to 3 nm"
+  const visMatch = text.match(/vsby\s+([^.,]*(?:nm|miles?)[^.,]*)/i);
   return visMatch ? visMatch[1].trim() : '';
 }
 
 function extractWeatherDescription(text) {
-  const weatherTerms = ['sunny', 'clear', 'cloudy', 'overcast', 'rain', 'fog', 'mist', 'partly'];
+  // Look for weather conditions like "showers", "clear", etc.
+  const weatherTerms = ['showers', 'clear', 'cloudy', 'overcast', 'rain', 'fog', 'mist', 'partly', 'scattered', 'chance'];
   for (const term of weatherTerms) {
     if (text.toLowerCase().includes(term)) {
-      const match = text.match(new RegExp(`([^.]*${term}[^.]*(?:cloud|weather|condition)?[^.]*)`, 'i'));
+      const match = text.match(new RegExp(`([^.,]*${term}[^.,]*)`, 'i'));
       if (match) {
         return match[1].trim();
       }

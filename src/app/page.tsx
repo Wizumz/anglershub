@@ -267,7 +267,7 @@ export default function Home() {
             // Still set empty forecasts but show debug info
             setForecasts([]);
             setSynopsis(data.synopsis || '');
-            setError(`⚠️ API returned no forecast periods. Debug: HTML length ${data.debug?.htmlLength || 'unknown'}, Synopsis: "${data.synopsis || 'none'}"`);
+            setError(`⚠️ API returned no forecast periods. Debug: HTML length ${data.debug?.htmlLength || 'unknown'}, Synopsis: "${data.synopsis || 'none'}". HTML Preview: "${data.debug?.htmlPreview?.substring(0, 200) || 'none'}"`);
           }
         } else {
           throw new Error(`Invalid API response format. Expected forecasts array, got: ${typeof data.forecasts}`);
