@@ -7,8 +7,8 @@ const nextConfig = {
   },
   // GitHub Pages serves from a subdirectory, so we need to set the basePath
   // This will be set via environment variable for flexibility
-  basePath: process.env.NODE_ENV === 'production' ? '/noaa-marine-weather' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/noaa-marine-weather/' : '',
+  basePath: process.env.NODE_ENV === 'production' ? '/anglershub' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/anglershub/' : '',
 };
 
 module.exports = nextConfig;
