@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
-import DateSelector from '../components/DateSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
 
 interface WeatherForecast {
@@ -125,7 +124,6 @@ const MARINE_ZONES: MarineZone[] = [
 ];
 
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [selectedZone, setSelectedZone] = useState<string>('');
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [zones] = useState<MarineZone[]>(MARINE_ZONES);
@@ -140,9 +138,9 @@ export default function Home() {
     }
   }, [zones]);
 
-  const generateSampleForecast = useCallback((zoneCode: string, startDate?: string | null): WeatherForecast[] => {
-    const baseDate = startDate ? new Date(startDate) : new Date();
+  const generateSampleForecast = useCallback((zoneCode: string) => {
     const forecasts: WeatherForecast[] = [];
+    const baseDate = new Date();
     
     // Generate realistic marine forecasts for 2-3 days
     const periods = [
@@ -281,7 +279,7 @@ export default function Home() {
         const marineUrl = `https://forecast.weather.gov/shmrn.php?mz=${selectedZone.toLowerCase()}&syn=${selectedMarineZone.synopsis_zone.toLowerCase()}`;
         setError(`Demo mode: Would fetch from ${marineUrl}. Deploy to Netlify for real data.`);
         
-        const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
+        const sampleForecasts = generateSampleForecast(selectedZone);
         setForecasts(sampleForecasts);
         
         const sampleSynopsis = `HIGH PRESSURE RIDGE OVER THE WATERS THROUGH TONIGHT. LOW PRESSURE SYSTEM APPROACHING FROM THE WEST TUESDAY INTO WEDNESDAY. SMALL CRAFT ADVISORY CONDITIONS EXPECTED TUESDAY AFTERNOON AND WEDNESDAY.`;
@@ -294,12 +292,12 @@ export default function Home() {
       setError(`Error: ${errorMessage}. Using sample data.`);
       
       // Fall back to sample data
-      const sampleForecasts = generateSampleForecast(selectedZone, selectedDate);
+      const sampleForecasts = generateSampleForecast(selectedZone);
       setForecasts(sampleForecasts);
     } finally {
       setLoading(false);
     }
-  }, [selectedZone, selectedDate, generateSampleForecast, zones]);
+  }, [selectedZone, generateSampleForecast, zones]);
 
   // Fetch forecast when zone or date changes
   useEffect(() => {
@@ -338,14 +336,13 @@ export default function Home() {
           />
         </div>
 
-        <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
+        <div className="bg-terminal-bg-alt p-4 rounded-lg border border-terminal-fg/20">
           <h2 className="text-terminal-accent mb-3 font-semibold">
-            <span className="text-terminal-success">$</span> SELECT DATE
+            <span className="text-terminal-success">$</span> CURRENT FORECAST
           </h2>
-          <DateSelector
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-          />
+          <div className="text-terminal-muted text-sm">
+            Forecast is for today's date: {format(new Date(), 'yyyy-MM-dd')}
+          </div>
         </div>
       </div>
 
