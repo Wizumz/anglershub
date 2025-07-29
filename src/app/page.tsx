@@ -256,12 +256,23 @@ export default function Home() {
           throw new Error(data.error);
         }
         
-        if (data.forecasts && data.forecasts.length > 0) {
-          setForecasts(data.forecasts);
-          setSynopsis(data.synopsis || '');
-          setError('✅ Live NOAA data loaded successfully');
+        console.log('Full API response:', data);
+        console.log('Forecasts array:', data.forecasts);
+        console.log('Forecasts length:', data.forecasts ? data.forecasts.length : 'undefined');
+        
+        if (data.forecasts && Array.isArray(data.forecasts)) {
+          if (data.forecasts.length > 0) {
+            setForecasts(data.forecasts);
+            setSynopsis(data.synopsis || '');
+            setError(`✅ Live NOAA data loaded successfully (${data.forecasts.length} periods)`);
+          } else {
+            // Still set empty forecasts but show debug info
+            setForecasts([]);
+            setSynopsis(data.synopsis || '');
+            setError(`⚠️ API returned no forecast periods. Debug: HTML length ${data.debug?.htmlLength || 'unknown'}, Synopsis: "${data.synopsis || 'none'}"`);
+          }
         } else {
-          throw new Error('No forecast data received from API');
+          throw new Error(`Invalid API response format. Expected forecasts array, got: ${typeof data.forecasts}`);
         }
         
       } else {
