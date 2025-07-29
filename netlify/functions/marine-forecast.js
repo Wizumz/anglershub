@@ -171,20 +171,18 @@ function parseMarineForecast(html) {
   try {
     console.log('Starting HTML parsing...');
 
-    // Extract synopsis - try multiple patterns
-    const synopsisPatterns = [
-      /<div[^>]*synopsis[^>]*>(.*?)<\/div>/is,
-      /<p[^>]*synopsis[^>]*>(.*?)<\/p>/is,
-      /<td[^>]*synopsis[^>]*>(.*?)<\/td>/is,
-      /SYNOPSIS[:\s]*(.*?)(?:<br|<p|$)/is
-    ];
-
-    for (const pattern of synopsisPatterns) {
-      const match = html.match(pattern);
-      if (match) {
-        synopsis = match[1].replace(/<[^>]*>/g, '').trim();
-        console.log('Found synopsis with pattern:', pattern.source);
-        break;
+    // Extract synopsis from the forecast content - it's usually at the top
+    // Look for content before the first time stamp
+    const timeStampPattern = /\d{1,2}:\d{2}\s+[AP]M\s+[A-Z]{3}/;
+    const timeStampMatch = html.search(timeStampPattern);
+    
+    if (timeStampMatch > -1) {
+      const beforeTimeStamp = html.substring(0, timeStampMatch);
+      // Look for synopsis in the content before timestamp
+      const synopsisMatch = beforeTimeStamp.match(/([A-Z][^<]*(?:HIGH PRESSURE|LOW PRESSURE|SMALL CRAFT|GALE|STORM|WIND|ADVISORY)[^<]*)/i);
+      if (synopsisMatch) {
+        synopsis = synopsisMatch[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+        console.log('Found synopsis:', synopsis.substring(0, 100));
       }
     }
 
@@ -197,23 +195,40 @@ function parseMarineForecast(html) {
       console.log('Found forecast content div');
       
       // Pattern for NOAA periods: <strong><font...>PERIOD</font></strong> followed by text
+      // But skip the first match if it's just a timestamp/header
       const periodPattern = /<strong><font[^>]*>(.*?)<\/font><\/strong>\s*(.*?)(?=<strong><font|$)/gs;
       
       let match;
+      let matchCount = 0;
       while ((match = periodPattern.exec(forecastContent)) !== null) {
-        const period = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
-        const forecastText = match[2].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+        matchCount++;
+        const rawPeriod = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+        const rawForecastText = match[2].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
         
-        if (period.length > 0 && forecastText.length > 0) {
-          console.log(`Found forecast: ${period} -> ${forecastText.substring(0, 100)}...`);
+        // Skip if this looks like a timestamp/header rather than a forecast period
+        const isTimeStamp = /\d{1,2}:\d{2}\s+[AP]M/.test(rawPeriod);
+        const isZoneHeader = /^[A-Z]{3}\d{3}/.test(rawPeriod);
+        
+        if (isTimeStamp || isZoneHeader) {
+          console.log(`Skipping timestamp/header: ${rawPeriod}`);
+          continue;
+        }
+        
+        // Clean up the period name - should be like "TONIGHT", "WED", etc.
+        const period = rawPeriod.replace(/^\s*&nbsp;\s*/, '').trim();
+        
+        if (period.length > 0 && rawForecastText.length > 0) {
+          console.log(`Found forecast period: ${period} -> ${rawForecastText.substring(0, 100)}...`);
           
-          // Parse forecast components
-          const winds = extractWinds(forecastText);
-          const seas = extractSeas(forecastText);
-          const waveDetail = extractWaveDetail(forecastText);
-          const thunderstorms = extractThunderstorms(forecastText);
-          const visibility = extractVisibility(forecastText);
-          const description = extractWeatherDescription(forecastText);
+          // Parse forecast components more carefully
+          const winds = extractWinds(rawForecastText);
+          const seas = extractSeas(rawForecastText);
+          const waveDetail = extractWaveDetail(rawForecastText);
+          const thunderstorms = extractThunderstorms(rawForecastText);
+          const visibility = extractVisibility(rawForecastText);
+          
+          // Extract just the weather conditions, not the full forecast
+          const description = extractWeatherConditions(rawForecastText);
 
           forecasts.push({
             date: new Date().toISOString(),
@@ -223,7 +238,7 @@ function parseMarineForecast(html) {
             waveDetail,
             thunderstorms,
             visibility,
-            description: description || forecastText.substring(0, 200)
+            description
           });
         }
       }
@@ -235,12 +250,10 @@ function parseMarineForecast(html) {
       
       // More comprehensive forecast extraction
       const forecastPatterns = [
-        // Pattern 1: Strong font tags (NOAA format)
+        // Pattern 1: Strong font tags (NOAA format) - but skip timestamps
         /<strong><font[^>]*>([^<]*)<\/font><\/strong>\s*(.*?)(?=<strong>|$)/gs,
         // Pattern 2: Bold period headers
-        /<b[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)[^<]*)<\/b>\s*[:\-\s]*([^<]*(?:<br[^>]*>[^<]*)*)/gi,
-        // Pattern 3: Table-based structure
-        /<td[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^<]*)<\/td>\s*<td[^>]*>([^<]*)<\/td>/gi
+        /<b[^>]*>([^<]*(?:tonight|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)[^<]*)<\/b>\s*[:\-\s]*([^<]*(?:<br[^>]*>[^<]*)*)/gi
       ];
 
       let foundForecasts = false;
@@ -251,8 +264,18 @@ function parseMarineForecast(html) {
         
         let match;
         while ((match = pattern.exec(html)) !== null) {
-          const period = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+          const rawPeriod = match[1].replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
           let forecastText = match[2].replace(/<br[^>]*>/gi, ' ').replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '').trim();
+          
+          // Skip timestamps and zone headers
+          const isTimeStamp = /\d{1,2}:\d{2}\s+[AP]M/.test(rawPeriod);
+          const isZoneHeader = /^[A-Z]{3}\d{3}/.test(rawPeriod);
+          
+          if (isTimeStamp || isZoneHeader) {
+            continue;
+          }
+          
+          const period = rawPeriod.trim();
           
           if (period.length > 0 && forecastText.length > 0) {
             console.log(`Found forecast: ${period} -> ${forecastText.substring(0, 100)}...`);
@@ -263,7 +286,7 @@ function parseMarineForecast(html) {
             const waveDetail = extractWaveDetail(forecastText);
             const thunderstorms = extractThunderstorms(forecastText);
             const visibility = extractVisibility(forecastText);
-            const description = extractWeatherDescription(forecastText);
+            const description = extractWeatherConditions(forecastText);
 
             forecasts.push({
               date: new Date().toISOString(),
@@ -273,7 +296,7 @@ function parseMarineForecast(html) {
               waveDetail,
               thunderstorms,
               visibility,
-              description: description || forecastText.substring(0, 100) + '...'
+              description
             });
             
             foundForecasts = true;
@@ -325,16 +348,39 @@ function extractVisibility(text) {
   return visMatch ? visMatch[1].trim() : '';
 }
 
-function extractWeatherDescription(text) {
-  // Look for weather conditions like "showers", "clear", etc.
-  const weatherTerms = ['showers', 'clear', 'cloudy', 'overcast', 'rain', 'fog', 'mist', 'partly', 'scattered', 'chance'];
-  for (const term of weatherTerms) {
-    if (text.toLowerCase().includes(term)) {
-      const match = text.match(new RegExp(`([^.,]*${term}[^.,]*)`, 'i'));
-      if (match) {
-        return match[1].trim();
-      }
+function extractWeatherConditions(text) {
+  // Extract specific weather conditions, not the full forecast text
+  const conditions = [];
+  
+  // Look for specific weather patterns
+  const weatherPatterns = [
+    /(?:chance of |scattered |slight chance of )?(showers?|rain|tstms?|thunderstorms?)/gi,
+    /(?:partly |mostly |becoming )?(?:cloudy|clear|overcast|sunny)/gi,
+    /fog|mist|haze/gi,
+    /(?:light |heavy )?(?:snow|sleet|freezing rain)/gi
+  ];
+  
+  for (const pattern of weatherPatterns) {
+    const matches = text.match(pattern);
+    if (matches) {
+      matches.forEach(match => {
+        const cleaned = match.trim();
+        if (cleaned && !conditions.includes(cleaned.toLowerCase())) {
+          conditions.push(cleaned);
+        }
+      });
     }
   }
-  return '';
+  
+  // If no specific weather found, return a general condition
+  if (conditions.length === 0) {
+    if (text.toLowerCase().includes('fair')) {
+      return 'Fair weather';
+    } else if (text.toLowerCase().includes('clear')) {
+      return 'Clear';
+    }
+    return ''; // Return empty if no weather conditions found
+  }
+  
+  return conditions.join(', ');
 }
