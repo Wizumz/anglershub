@@ -100,46 +100,73 @@ const getMoonIcon = (phase: number): string => {
 };
 
 const calculateMoonTimes = (date: Date, latitude: number, longitude: number): { moonrise: string | null; moonset: string | null } => {
-  // Simplified moonrise/moonset calculation
-  // This is a basic approximation - for production, consider using a proper astronomical library
-  const phase = getMoonPhase(date);
-  
-  // Approximate moon times based on phase and location
-  // Full moon rises around sunset, new moon rises around sunrise
-  const baseHour = 6 + (phase * 24); // Hours from midnight
-  const latitudeAdjustment = (latitude - 40) * 0.1; // Rough latitude adjustment
-  
-  const moonriseHour = (baseHour + latitudeAdjustment) % 24;
-  const moonsetHour = (moonriseHour + 12) % 24;
-  
-  const formatTime = (hour: number): string => {
-    const h = Math.floor(hour);
-    const m = Math.floor((hour - h) * 60);
-    return format(new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m), 'h:mm a');
-  };
-  
-  // Sometimes the moon doesn't rise or set on a given day
-  if (Math.abs(latitude) > 60 && (phase < 0.1 || phase > 0.9)) {
+  try {
+    // Input validation
+    if (!date || isNaN(date.getTime()) || !latitude || !longitude || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      return { moonrise: null, moonset: null };
+    }
+    
+    // Simplified moonrise/moonset calculation
+    // This is a basic approximation - for production, consider using a proper astronomical library
+    const phase = getMoonPhase(date);
+    
+    // Approximate moon times based on phase and location
+    // Full moon rises around sunset, new moon rises around sunrise
+    const baseHour = 6 + (phase * 24); // Hours from midnight
+    const latitudeAdjustment = (latitude - 40) * 0.1; // Rough latitude adjustment
+    
+    const moonriseHour = (baseHour + latitudeAdjustment) % 24;
+    const moonsetHour = (moonriseHour + 12) % 24;
+    
+    const formatTime = (hour: number): string => {
+      const h = Math.floor(hour);
+      const m = Math.floor((hour - h) * 60);
+      return format(new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m), 'h:mm a');
+    };
+    
+    // Sometimes the moon doesn't rise or set on a given day
+    if (Math.abs(latitude) > 60 && (phase < 0.1 || phase > 0.9)) {
+      return { moonrise: null, moonset: null };
+    }
+    
+    return {
+      moonrise: formatTime(moonriseHour),
+      moonset: formatTime(moonsetHour)
+    };
+  } catch (error) {
+    console.error('Error calculating moon times:', error);
     return { moonrise: null, moonset: null };
   }
-  
-  return {
-    moonrise: formatTime(moonriseHour),
-    moonset: formatTime(moonsetHour)
-  };
 };
 
 const getLunarData = (date: Date, latitude: number, longitude: number): LunarData => {
-  const phase = getMoonPhase(date);
-  const moonTimes = calculateMoonTimes(date, latitude, longitude);
-  
-  return {
-    moonPhase: phase,
-    moonPhaseName: getMoonPhaseName(phase),
-    moonIllumination: Math.abs(Math.cos(phase * 2 * Math.PI)) * 100,
-    moonrise: moonTimes.moonrise,
-    moonset: moonTimes.moonset
-  };
+  try {
+    // Input validation
+    if (!date || isNaN(date.getTime()) || !latitude || !longitude) {
+      throw new Error('Invalid input parameters for lunar calculation');
+    }
+    
+    const phase = getMoonPhase(date);
+    const moonTimes = calculateMoonTimes(date, latitude, longitude);
+    
+    return {
+      moonPhase: phase,
+      moonPhaseName: getMoonPhaseName(phase),
+      moonIllumination: Math.abs(Math.cos(phase * 2 * Math.PI)) * 100,
+      moonrise: moonTimes.moonrise,
+      moonset: moonTimes.moonset
+    };
+  } catch (error) {
+    console.error('Error in getLunarData:', error);
+    // Return safe default values
+    return {
+      moonPhase: 0,
+      moonPhaseName: 'Unknown',
+      moonIllumination: 0,
+      moonrise: null,
+      moonset: null
+    };
+  }
 };
 
 // Convert hPa to inHg for barometric pressure
@@ -518,49 +545,63 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                             {formatTimeEST(weatherData.daily.sunset[weatherInfo.dailyIndex])}
                           </span>
                         </div>
-                        {(() => {
-                          const lunarData = getLunarData(parseISO(forecastDate + 'T00:00:00'), latitude, longitude);
-                          return (
-                            <>
-                              <div className="flex justify-between">
-                                <span className="text-terminal-accent font-semibold">Moonrise:</span>
-                                <span className="text-blue-300">
-                                  {lunarData.moonrise || 'No rise'}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-terminal-accent font-semibold">Moonset:</span>
-                                <span className="text-blue-400">
-                                  {lunarData.moonset || 'No set'}
-                                </span>
-                              </div>
-                            </>
-                          );
-                        })()}
+                        {latitude && longitude ? (() => {
+                          try {
+                            const lunarData = getLunarData(parseISO(forecastDate + 'T00:00:00'), latitude, longitude);
+                            return (
+                              <>
+                                <div className="flex justify-between">
+                                  <span className="text-terminal-accent font-semibold">Moonrise:</span>
+                                  <span className="text-blue-300">
+                                    {lunarData.moonrise || 'No rise'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-terminal-accent font-semibold">Moonset:</span>
+                                  <span className="text-blue-400">
+                                    {lunarData.moonset || 'No set'}
+                                  </span>
+                                </div>
+                              </>
+                            );
+                          } catch (error) {
+                            console.error('Lunar calculation error:', error);
+                            return null;
+                          }
+                        })() : null}
                       </div>
                     </div>
 
                     {/* Tide Information */}
                     {tideData ? (() => {
                       const dayTides = getTidesForDate(parseISO(forecastDate + 'T00:00:00'), tideData.predictions);
-                      const lunarData = getLunarData(parseISO(forecastDate + 'T00:00:00'), latitude, longitude);
                       
                       return (
                         <div className="space-y-3">
                           <h5 className="text-terminal-accent text-sm font-medium">Tides (EST)</h5>
                           
                           {/* Moon Phase Display */}
-                          <div className="bg-terminal-bg border border-terminal-border rounded p-2 mb-3">
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{getMoonIcon(lunarData.moonPhase)}</span>
-                                <div>
-                                  <div className="text-terminal-accent font-semibold">{lunarData.moonPhaseName}</div>
-                                  <div className="text-terminal-muted">{Math.round(lunarData.moonIllumination)}% illuminated</div>
+                          {latitude && longitude ? (() => {
+                            try {
+                              const lunarData = getLunarData(parseISO(forecastDate + 'T00:00:00'), latitude, longitude);
+                              return (
+                                <div className="bg-terminal-bg border border-terminal-border rounded p-2 mb-3">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{getMoonIcon(lunarData.moonPhase)}</span>
+                                      <div>
+                                        <div className="text-terminal-accent font-semibold">{lunarData.moonPhaseName}</div>
+                                        <div className="text-terminal-muted">{Math.round(lunarData.moonIllumination)}% illuminated</div>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          </div>
+                              );
+                            } catch (error) {
+                              console.error('Moon phase calculation error:', error);
+                              return null;
+                            }
+                          })() : null}
                           
                           {dayTides.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2 text-sm">
