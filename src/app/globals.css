@@ -11,6 +11,32 @@
   --border: #333333;
 }
 
+/* Dark theme (default) */
+.dark {
+  --background: #0a0a0a;
+  --background-alt: #151515;
+  --foreground: #00ff00;
+  --accent: #00ffff;
+  --warning: #ffff00;
+  --error: #ff0000;
+  --success: #00ff00;
+  --muted: #808080;
+  --border: #333333;
+}
+
+/* Light theme */
+.light {
+  --background: #ffffff;
+  --background-alt: #f8f9fa;
+  --foreground: #1a1a1a;
+  --accent: #0066cc;
+  --warning: #ff8c00;
+  --error: #dc3545;
+  --success: #28a745;
+  --muted: #6c757d;
+  --border: #dee2e6;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -26,29 +52,48 @@ body {
   font-family: 'JetBrains Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.4;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
-  background: #0a0a0a;
-  color: #00ff00;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-/* Terminal-style scrollbar */
-::-webkit-scrollbar {
+/* Terminal-style scrollbar for dark theme */
+.dark ::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+.dark ::-webkit-scrollbar-track {
   background: #151515;
 }
 
-::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb {
   background: #333333;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #555555;
+}
+
+/* Light theme scrollbar */
+.light ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* Terminal cursor effect */
@@ -62,17 +107,17 @@ body {
   51%, 100% { opacity: 0; }
 }
 
-/* Terminal text effects */
-.terminal-text {
+/* Terminal text effects - only in dark mode */
+.dark .terminal-text {
   text-shadow: 0 0 5px currentColor;
 }
 
-.glitch {
+.dark .glitch {
   position: relative;
 }
 
-.glitch::before,
-.glitch::after {
+.dark .glitch::before,
+.dark .glitch::after {
   content: attr(data-text);
   position: absolute;
   top: 0;
@@ -81,13 +126,13 @@ body {
   height: 100%;
 }
 
-.glitch::before {
+.dark .glitch::before {
   animation: glitch-1 0.5s infinite;
   color: #ff0000;
   z-index: -1;
 }
 
-.glitch::after {
+.dark .glitch::after {
   animation: glitch-2 0.5s infinite;
   color: #00ffff;
   z-index: -2;
