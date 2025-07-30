@@ -1,5 +1,12 @@
 import { format, parseISO, addDays } from 'date-fns';
 import { useState, useEffect } from 'react';
+import { 
+  fetchTideData, 
+  calculateTidalCoefficient, 
+  getTidalCoefficientDescription,
+  type TideData, 
+  type TidePrediction 
+} from '../utils/tidesApi';
 
 interface WeatherForecast {
   date: string;
@@ -42,10 +49,12 @@ interface ForecastDisplayProps {
   selectedZone: string;
   latitude: number;
   longitude: number;
+  zoneCode: string;
 }
 
-export default function ForecastDisplay({ forecasts, selectedZone, latitude, longitude }: ForecastDisplayProps) {
+export default function ForecastDisplay({ forecasts, selectedZone, latitude, longitude, zoneCode }: ForecastDisplayProps) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [tideData, setTideData] = useState<TideData | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Fetch weather data
@@ -72,6 +81,19 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
     fetchWeatherData();
   }, [latitude, longitude]);
 
+  // Fetch tide data
+  useEffect(() => {
+    if (!zoneCode) return;
+
+    fetchTideData(zoneCode)
+      .then((data) => {
+        setTideData(data);
+      })
+      .catch((err) => {
+        console.error('Tide data error:', err);
+      });
+  }, [zoneCode]);
+
   // Convert Celsius to Fahrenheit
   const celsiusToFahrenheit = (celsius: number): number => {
     return Math.round((celsius * 9/5) + 32);
@@ -84,6 +106,44 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
       minute: '2-digit',
       hour12: true,
       timeZone: 'America/New_York'
+    });
+  };
+
+  // Tide utility functions
+  const formatTideTime = (timeStr: string): string => {
+    try {
+      const date = parseISO(timeStr);
+      return format(date, 'h:mm a');
+    } catch {
+      return timeStr;
+    }
+  };
+
+  const getTideIcon = (type: 'H' | 'L'): string => {
+    return type === 'H' ? '🌊' : '🏖️';
+  };
+
+  const getTideLabel = (type: 'H' | 'L'): string => {
+    return type === 'H' ? 'High' : 'Low';
+  };
+
+  const getTidalCoefficientColor = (coefficient: number): string => {
+    if (coefficient >= 95) return 'text-red-400';
+    if (coefficient >= 80) return 'text-orange-400';
+    if (coefficient >= 65) return 'text-yellow-400';
+    if (coefficient >= 45) return 'text-blue-400';
+    return 'text-gray-400';
+  };
+
+  const getTidesForDate = (date: Date, tides: TidePrediction[]): TidePrediction[] => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return tides.filter(tide => {
+      try {
+        const tideDate = format(parseISO(tide.time), 'yyyy-MM-dd');
+        return tideDate === dateStr;
+      } catch {
+        return false;
+      }
     });
   };
 
@@ -371,6 +431,55 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                         </div>
                       </div>
                     </div>
+
+                    {/* Tide Information */}
+                    {tideData && (() => {
+                      const dayTides = getTidesForDate(parseISO(forecastDate + 'T00:00:00'), tideData.predictions);
+                      const tidalCoefficient = calculateTidalCoefficient(tideData.predictions);
+                      
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-terminal-accent text-sm font-medium">Tides (EST)</h5>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-bold ${getTidalCoefficientColor(tidalCoefficient)}`}>
+                                {tidalCoefficient}
+                              </span>
+                              <span className="text-xs text-terminal-muted">
+                                {getTidalCoefficientDescription(tidalCoefficient)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {dayTides.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {dayTides.map((tide, tideIndex) => (
+                                <div key={tideIndex} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs">{getTideIcon(tide.type)}</span>
+                                    <span className="text-terminal-accent font-semibold text-xs">
+                                      {getTideLabel(tide.type)}:
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-xs font-medium text-terminal-success">
+                                      {formatTideTime(tide.time)}
+                                    </div>
+                                    <div className="text-xs text-terminal-muted">
+                                      {tide.value.toFixed(1)}ft
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-terminal-muted">
+                              No tide data available for this day
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
@@ -430,10 +539,37 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
             </div>
           </div>
         </div>
+
+        {/* Tide Data Source */}
+        {tideData && (
+          <div className="mt-4 pt-3 border-t border-terminal-fg/20">
+            <h5 className="text-terminal-accent font-medium mb-2">Tide Forecast Data Source</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-terminal-muted">
+              <div className="space-y-1">
+                <div><span className="text-terminal-accent font-semibold">Source:</span> NOAA Tides & Currents</div>
+                <div><span className="text-terminal-accent font-semibold">Station:</span> {tideData.stationName}</div>
+                <div><span className="text-terminal-accent font-semibold">Official URL:</span> <a 
+                  href={`https://tidesandcurrents.noaa.gov/stationhome.html?id=${tideData.stationId}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-terminal-success hover:underline"
+                >
+                  NOAA Station {tideData.stationId}
+                </a></div>
+              </div>
+              <div className="space-y-1">
+                <div><span className="text-terminal-accent font-semibold">Datum:</span> {tideData.datum} (Mean Lower Low Water)</div>
+                <div><span className="text-terminal-accent font-semibold">Coefficients:</span> Tidal strength (20-120 scale)</div>
+                <div><span className="text-terminal-accent font-semibold">Timezone:</span> {tideData.timeZone}</div>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="mt-3 text-xs text-terminal-muted">
           <span className="text-terminal-warning">⚠️ Official Source:</span> Marine forecast data is sourced directly from NOAA's National Weather Service. 
           Weather forecast data is provided by Open-Meteo using multiple meteorological models. 
+          {tideData && "Tide predictions are provided by NOAA's Center for Operational Oceanographic Products and Services. "}
           For the most current conditions and any watches/warnings, always check the official NOAA marine forecast link above.
         </div>
       </div>
