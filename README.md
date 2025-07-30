@@ -1,6 +1,8 @@
-# AnglersHub - NOAA Marine Weather Terminal
+# 🌊 NOAA Marine Weather Forecast - Real-Time Marine Conditions
 
-A modern web application that displays NOAA Marine Weather forecasts with a retro terminal-style interface. Built with Next.js, TypeScript, and Chart.js.
+*Latest deployment: 2025-07-30 12:26 UTC*
+
+This Next.js application provides real-time marine weather forecasts and conditions for US East Coast waters using NOAA data.
 
 ![Terminal Style Interface](https://img.shields.io/badge/interface-terminal--style-green)
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black)
