@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
+import PWAManager from '../components/PWAManager';
 
 interface WeatherForecast {
   date: string;
@@ -354,7 +355,8 @@ export default function Home() {
   }, [selectedZone, fetchForecast]);
 
   return (
-    <div className="min-h-screen bg-terminal-bg text-terminal-fg font-mono p-4">
+    <PWAManager>
+      <div className="min-h-screen bg-terminal-bg text-terminal-fg font-mono p-4">
       {/* Terminal Header */}
       <header className="border-b border-terminal-border pb-4 mb-6">
         <div className="flex items-center justify-between">
@@ -483,5 +485,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  </PWAManager>
   );
 }
