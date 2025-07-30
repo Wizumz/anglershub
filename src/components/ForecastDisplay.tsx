@@ -276,9 +276,16 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
           const noaaPeriods = getNoaaPeriodsForDate(dateStr);
           const tidesForDate = getTidesForDate(dateStr);
           
-          if (!weatherInfo) return null;
+          // Always show tiles if we have NOAA forecast data for this date
+          if (noaaPeriods.length === 0) return null;
 
-          const { dailyIndex, morningIndex, afternoonIndex, pressureTrend, isToday } = weatherInfo;
+          const { dailyIndex, morningIndex, afternoonIndex, pressureTrend, isToday } = weatherInfo || {
+            dailyIndex: -1,
+            morningIndex: -1,
+            afternoonIndex: -1,
+            pressureTrend: 'N/A',
+            isToday: dateStr === new Date().toISOString().split('T')[0]
+          };
 
           return (
             <div key={dateStr} className="border border-terminal-fg/20 rounded-lg p-4 bg-terminal-bg-alt">
@@ -356,70 +363,74 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                   </h4>
                   
                   <div className="space-y-3 text-sm">
-                    {weatherData && morningIndex >= 0 && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-terminal-accent font-semibold w-20">Morning:</span>
-                        <span className="text-xl">
-                          {getWeatherIcon(weatherData.hourly.weather_code[morningIndex], weatherData.hourly.is_day[morningIndex] === 1)}
-                        </span>
-                        <span>{getWeatherDescription(weatherData.hourly.weather_code[morningIndex])}</span>
-                      </div>
-                    )}
-                    
-                    {weatherData && afternoonIndex >= 0 && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-terminal-accent font-semibold w-20">Afternoon:</span>
-                        <span className="text-xl">
-                          {getWeatherIcon(weatherData.hourly.weather_code[afternoonIndex], weatherData.hourly.is_day[afternoonIndex] === 1)}
-                        </span>
-                        <span>{getWeatherDescription(weatherData.hourly.weather_code[afternoonIndex])}</span>
-                      </div>
-                    )}
-
-                    {weatherData && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-terminal-accent font-semibold w-20">Overall:</span>
-                        <span className="text-xl">
-                          {getWeatherIcon(weatherData.daily.weather_code[dailyIndex], true)}
-                        </span>
-                        <span>{getWeatherDescription(weatherData.daily.weather_code[dailyIndex])}</span>
-                      </div>
-                    )}
-
-                    {/* Temperature & Environmental */}
-                    {weatherData && (
-                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <span className="text-terminal-accent font-semibold">High: </span>
-                          <span className="text-red-400">
-                            {Math.round(weatherData.daily.temperature_2m_max[dailyIndex])}°F
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-terminal-accent font-semibold">Low: </span>
-                          <span className="text-blue-400">
-                            {Math.round(weatherData.daily.temperature_2m_min[dailyIndex])}°F
-                          </span>
-                        </div>
-                        
-                        {isToday && (
-                          <>
-                            <div>
-                              <span className="text-terminal-accent font-semibold">Humidity: </span>
-                              <span>{weatherData.current.relative_humidity_2m}%</span>
-                            </div>
-                            <div>
-                              <span className="text-terminal-accent font-semibold">Pressure: </span>
-                              <span>{Math.round(weatherData.current.pressure_msl)} hPa</span>
-                            </div>
-                            <div className="col-span-2">
-                              <span className="text-terminal-accent font-semibold">Pressure Trend: </span>
-                              <span className={`${pressureTrend === 'Rising' ? 'text-green-400' : pressureTrend === 'Falling' ? 'text-red-400' : 'text-blue-400'}`}>
-                                {pressureTrend}
-                              </span>
-                            </div>
-                          </>
+                    {weatherData && dailyIndex >= 0 ? (
+                      <>
+                        {morningIndex >= 0 && (
+                          <div className="flex items-center gap-3">
+                            <span className="text-terminal-accent font-semibold w-20">Morning:</span>
+                            <span className="text-xl">
+                              {getWeatherIcon(weatherData.hourly.weather_code[morningIndex], weatherData.hourly.is_day[morningIndex] === 1)}
+                            </span>
+                            <span>{getWeatherDescription(weatherData.hourly.weather_code[morningIndex])}</span>
+                          </div>
                         )}
+                        
+                        {afternoonIndex >= 0 && (
+                          <div className="flex items-center gap-3">
+                            <span className="text-terminal-accent font-semibold w-20">Afternoon:</span>
+                            <span className="text-xl">
+                              {getWeatherIcon(weatherData.hourly.weather_code[afternoonIndex], weatherData.hourly.is_day[afternoonIndex] === 1)}
+                            </span>
+                            <span>{getWeatherDescription(weatherData.hourly.weather_code[afternoonIndex])}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-3">
+                          <span className="text-terminal-accent font-semibold w-20">Overall:</span>
+                          <span className="text-xl">
+                            {getWeatherIcon(weatherData.daily.weather_code[dailyIndex], true)}
+                          </span>
+                          <span>{getWeatherDescription(weatherData.daily.weather_code[dailyIndex])}</span>
+                        </div>
+
+                        {/* Temperature & Environmental */}
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-terminal-accent font-semibold">High: </span>
+                            <span className="text-red-400">
+                              {Math.round(weatherData.daily.temperature_2m_max[dailyIndex])}°F
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-terminal-accent font-semibold">Low: </span>
+                            <span className="text-blue-400">
+                              {Math.round(weatherData.daily.temperature_2m_min[dailyIndex])}°F
+                            </span>
+                          </div>
+                          
+                          {isToday && (
+                            <>
+                              <div>
+                                <span className="text-terminal-accent font-semibold">Humidity: </span>
+                                <span>{weatherData.current.relative_humidity_2m}%</span>
+                              </div>
+                              <div>
+                                <span className="text-terminal-accent font-semibold">Pressure: </span>
+                                <span>{Math.round(weatherData.current.pressure_msl)} hPa</span>
+                              </div>
+                              <div className="col-span-2">
+                                <span className="text-terminal-accent font-semibold">Pressure Trend: </span>
+                                <span className={`${pressureTrend === 'Rising' ? 'text-green-400' : pressureTrend === 'Falling' ? 'text-red-400' : 'text-blue-400'}`}>
+                                  {pressureTrend}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-terminal-muted text-sm">
+                        {loading ? 'Loading weather data...' : error ? `Error: ${error}` : 'Weather data not available for this date'}
                       </div>
                     )}
                   </div>
@@ -479,7 +490,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                   </h4>
                   
                   <div className="space-y-3 text-sm">
-                    {weatherData && (
+                    {weatherData && dailyIndex >= 0 ? (
                       <>
                         <div>
                           <span className="text-terminal-accent font-semibold">Sunrise: </span>
@@ -512,6 +523,10 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                           </div>
                         )}
                       </>
+                    ) : (
+                      <div className="text-terminal-muted text-sm">
+                        {loading ? 'Loading solunar data...' : error ? `Error: ${error}` : 'Solunar data not available for this date'}
+                      </div>
                     )}
                   </div>
                 </div>
