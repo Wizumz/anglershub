@@ -13,7 +13,6 @@ interface WeatherForecast {
   waveDetail?: string;
   thunderstorms?: string;
   visibility?: string;
-  description: string;
 }
 
 interface MarineZone {
@@ -212,14 +211,7 @@ export default function Home() {
       'Choppy conditions near shore'
     ];
     
-    const sampleDescriptions = [
-      'Partly cloudy',
-      'Mostly clear',
-      'Overcast',
-      'Rain showers likely',
-      'Thunderstorms possible',
-      'Fair weather'
-    ];
+
     
     for (let i = 0; i < Math.min(periods.length, 6); i++) {
       const date = new Date(baseDate);
@@ -232,8 +224,7 @@ export default function Home() {
         seas: sampleSeas[i],
         waveDetail: sampleWaveDetail[i],
         thunderstorms: i === 4 ? 'Thunderstorms likely after 2 PM' : undefined,
-        visibility: i < 3 ? 'Greater than 6 miles' : 'Reduced in rain showers',
-        description: sampleDescriptions[i]
+        visibility: i < 3 ? 'Greater than 6 miles' : 'Reduced in rain showers'
       });
     }
     

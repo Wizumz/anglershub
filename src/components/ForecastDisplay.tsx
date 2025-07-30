@@ -9,7 +9,6 @@ interface WeatherForecast {
   waveDetail?: string;
   thunderstorms?: string;
   visibility?: string;
-  description: string;
 }
 
 interface WeatherData {
@@ -129,18 +128,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
     return isDay ? '🌤️' : '🌙';
   };
 
-  const getWeatherIcon = (description: string) => {
-    const desc = description.toLowerCase();
-    if (desc.includes('sunny') || desc.includes('clear')) return '☀️';
-    if (desc.includes('partly cloudy') || desc.includes('partly')) return '⛅';
-    if (desc.includes('cloudy') || desc.includes('overcast')) return '☁️';
-    if (desc.includes('rain') || desc.includes('showers')) return '🌧️';
-    if (desc.includes('thunderstorm') || desc.includes('storm')) return '⛈️';
-    if (desc.includes('fog') || desc.includes('mist')) return '🌫️';
-    if (desc.includes('snow')) return '❄️';
-    if (desc.includes('wind')) return '💨';
-    return '🌤️'; // default partly sunny
-  };
+
 
   // Calculate forecast date based on period
   const calculateForecastDate = (period: string, baseDate: Date): string => {
@@ -246,17 +234,8 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                 <h4 className="text-terminal-accent font-medium mb-2 border-b border-terminal-fg/20 pb-1">
                   🌊 Marine Conditions
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                  {forecast.description && (
-                    <div>
-                      <span className="text-terminal-accent font-semibold">Weather: </span>
-                      <span className="inline-flex items-center gap-1">
-                        {getWeatherIcon(forecast.description)} {forecast.description}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {forecast.winds && (
+                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                   {forecast.winds && (
                     <div>
                       <span className="text-terminal-accent font-semibold">Winds: </span>
                       <span>{forecast.winds}</span>
@@ -429,8 +408,32 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
             <div><span className="text-terminal-accent font-semibold">Authority:</span> National Weather Service</div>
           </div>
         </div>
+        <div className="mt-4 pt-3 border-t border-terminal-fg/20">
+          <h5 className="text-terminal-accent font-medium mb-2">Weather Forecast Data Source</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-terminal-muted">
+            <div className="space-y-1">
+              <div><span className="text-terminal-accent font-semibold">Source:</span> Open-Meteo Weather API</div>
+              <div><span className="text-terminal-accent font-semibold">Location:</span> {latitude.toFixed(3)}°N, {Math.abs(longitude).toFixed(3)}°W</div>
+              <div><span className="text-terminal-accent font-semibold">Official URL:</span> <a 
+                href="https://open-meteo.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-terminal-success hover:underline"
+              >
+                Open-Meteo.com
+              </a></div>
+            </div>
+            <div className="space-y-1">
+              <div><span className="text-terminal-accent font-semibold">Models:</span> ECMWF, GFS, ICON</div>
+              <div><span className="text-terminal-accent font-semibold">Resolution:</span> 0.25° (~25km)</div>
+              <div><span className="text-terminal-accent font-semibold">Timezone:</span> Eastern Standard Time</div>
+            </div>
+          </div>
+        </div>
+        
         <div className="mt-3 text-xs text-terminal-muted">
-          <span className="text-terminal-warning">⚠️ Official Source:</span> This data is sourced directly from NOAA's National Weather Service marine forecasting system. 
+          <span className="text-terminal-warning">⚠️ Official Source:</span> Marine forecast data is sourced directly from NOAA's National Weather Service. 
+          Weather forecast data is provided by Open-Meteo using multiple meteorological models. 
           For the most current conditions and any watches/warnings, always check the official NOAA marine forecast link above.
         </div>
       </div>
