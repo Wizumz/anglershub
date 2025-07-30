@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
-import DetailedWeather from '../components/DetailedWeather';
 import PWAManager from '../components/PWAManager';
 
 interface WeatherForecast {
@@ -472,20 +471,7 @@ export default function Home() {
         );
       })()}
 
-      {/* Detailed Weather with Tide Data */}
-      {forecasts.length > 0 && !loading && (() => {
-        const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
-        return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
-          <div className="mt-6">
-            <DetailedWeather 
-              latitude={selectedMarineZone.latitude}
-              longitude={selectedMarineZone.longitude}
-              selectedZone={selectedZone}
-              forecasts={forecasts}
-            />
-          </div>
-        ) : null;
-      })()}
+
 
       {/* Footer */}
       <footer className="mt-8 pt-6 border-t border-terminal-fg/20 text-center text-sm text-terminal-muted">
