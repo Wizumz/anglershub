@@ -5,6 +5,7 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -19,6 +20,18 @@ module.exports = {
           'success': '#00ff00',
           'muted': '#808080',
           'border': '#333333',
+        },
+        'light': {
+          'bg': '#ffffff',
+          'bg-alt': '#f8f9fa',
+          'text': '#1a1a1a',
+          'fg': '#1a1a1a', // alias for text
+          'accent': '#0066cc',
+          'warning': '#ff8c00',
+          'error': '#dc3545',
+          'success': '#28a745',
+          'muted': '#6c757d',
+          'border': '#dee2e6',
         }
       },
       fontFamily: {

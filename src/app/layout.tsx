@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "../utils/ThemeContext";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
@@ -48,9 +49,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
-        className={`${jetbrainsMono.variable} antialiased bg-terminal-bg text-terminal-text font-mono`}
+        className={`${jetbrainsMono.variable} antialiased font-mono dark:bg-terminal-bg dark:text-terminal-text light:bg-light-bg light:text-light-text`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

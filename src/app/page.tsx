@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
 import PWAManager from '../components/PWAManager';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface WeatherForecast {
   date: string;
@@ -356,27 +357,30 @@ export default function Home() {
 
   return (
     <PWAManager>
-      <div className="min-h-screen bg-terminal-bg text-terminal-fg font-mono p-4">
+      <div className="min-h-screen dark:bg-terminal-bg light:bg-light-bg dark:text-terminal-fg light:text-light-fg font-mono p-4">
       {/* Terminal Header */}
-      <header className="border-b border-terminal-border pb-4 mb-6">
+      <header className="border-b dark:border-terminal-border light:border-light-border pb-4 mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-terminal-accent glitch" data-text="NOAA MARINE WEATHER">
+          <h1 className="text-2xl font-bold dark:text-terminal-accent light:text-light-accent glitch" data-text="NOAA MARINE WEATHER">
             NOAA MARINE WEATHER
           </h1>
-          <div className="text-terminal-muted text-sm">
-            {format(new Date(), 'yyyy-MM-dd HH:mm:ss')} UTC
+          <div className="flex items-center gap-4">
+            <div className="dark:text-terminal-muted light:text-light-muted text-sm">
+              {format(new Date(), 'yyyy-MM-dd HH:mm:ss')} UTC
+            </div>
+            <ThemeToggle />
           </div>
         </div>
-        <div className="mt-2 text-terminal-muted">
-          <span className="text-terminal-success">{'>'}</span> Real-time marine forecasts and conditions
+        <div className="mt-2 dark:text-terminal-muted light:text-light-muted">
+          <span className="dark:text-terminal-success light:text-light-success">{'>'}</span> Real-time marine forecasts and conditions
         </div>
       </header>
 
       {/* Controls Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
-          <h2 className="text-terminal-accent mb-3 font-semibold">
-            <span className="text-terminal-success">$</span> SELECT LOCATION
+        <div className="border dark:border-terminal-border light:border-light-border dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded">
+          <h2 className="dark:text-terminal-accent light:text-light-accent mb-3 font-semibold">
+            <span className="dark:text-terminal-success light:text-light-success">$</span> SELECT LOCATION
           </h2>
           <LocationSelector
             zones={zones}
@@ -390,8 +394,8 @@ export default function Home() {
 
       {/* Error Display */}
       {error && (
-        <div className="border border-terminal-error bg-terminal-bg-alt p-4 rounded mb-6">
-          <div className="text-terminal-warning">
+        <div className="border dark:border-terminal-error light:border-light-error dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded mb-6">
+          <div className="dark:text-terminal-warning light:text-light-warning">
             <span className="font-bold">INFO:</span> {error}
           </div>
         </div>
@@ -399,8 +403,8 @@ export default function Home() {
 
       {/* Loading State */}
       {loading && (
-        <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded mb-6">
-          <div className="text-terminal-accent">
+        <div className="border dark:border-terminal-border light:border-light-border dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded mb-6">
+          <div className="dark:text-terminal-accent light:text-light-accent">
             <span className="animate-pulse">Loading forecast data...</span>
             <span className="cursor animate-blink"></span>
           </div>
@@ -411,11 +415,11 @@ export default function Home() {
 
       {/* Synopsis Section */}
       {synopsis && !loading && (
-        <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded mb-6">
-          <h2 className="text-terminal-accent mb-3 font-semibold">
-            <span className="text-terminal-success">$</span> MARINE SYNOPSIS
+        <div className="border dark:border-terminal-border light:border-light-border dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded mb-6">
+          <h2 className="dark:text-terminal-accent light:text-light-accent mb-3 font-semibold">
+            <span className="dark:text-terminal-success light:text-light-success">$</span> MARINE SYNOPSIS
           </h2>
-          <div className="text-terminal-text text-sm leading-relaxed">
+          <div className="dark:text-terminal-text light:text-light-text text-sm leading-relaxed">
             {synopsis}
           </div>
         </div>
@@ -427,9 +431,9 @@ export default function Home() {
       {forecasts.length > 0 && !loading && (() => {
         const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
         return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
-          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
-            <h2 className="text-terminal-accent mb-4 font-semibold">
-              <span className="text-terminal-success">$</span> MARINE FORECAST
+          <div className="border dark:border-terminal-border light:border-light-border dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded">
+            <h2 className="dark:text-terminal-accent light:text-light-accent mb-4 font-semibold">
+              <span className="dark:text-terminal-success light:text-light-success">$</span> MARINE FORECAST
             </h2>
             <ForecastDisplay 
               forecasts={forecasts} 
@@ -440,9 +444,9 @@ export default function Home() {
             />
           </div>
         ) : (
-          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
-            <h2 className="text-terminal-accent mb-4 font-semibold">
-              <span className="text-terminal-success">$</span> MARINE FORECAST
+          <div className="border dark:border-terminal-border light:border-light-border dark:bg-terminal-bg-alt light:bg-light-bg-alt p-4 rounded">
+            <h2 className="dark:text-terminal-accent light:text-light-accent mb-4 font-semibold">
+              <span className="dark:text-terminal-success light:text-light-success">$</span> MARINE FORECAST
             </h2>
             <ForecastDisplay 
               forecasts={forecasts} 
@@ -456,14 +460,14 @@ export default function Home() {
       })()}
 
       {/* Footer */}
-      <footer className="mt-8 pt-6 border-t border-terminal-fg/20 text-center text-sm text-terminal-muted">
+      <footer className="mt-8 pt-6 border-t dark:border-terminal-fg/20 light:border-light-fg/20 text-center text-sm dark:text-terminal-muted light:text-light-muted">
         <div className="mb-3">
           Created by{' '}
           <a 
             href="https://www.instagram.com/wizumz/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-terminal-accent hover:text-terminal-success underline"
+            className="dark:text-terminal-accent light:text-light-accent dark:hover:text-terminal-success light:hover:text-light-success underline"
           >
             Wizumz
           </a>
@@ -472,12 +476,12 @@ export default function Home() {
             href="https://buymeacoffee.com/newenglandfishingreport" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-terminal-accent hover:text-terminal-success underline"
+            className="dark:text-terminal-accent light:text-light-accent dark:hover:text-terminal-success light:hover:text-light-success underline"
           >
             buying me a coffee
           </a>
         </div>
-        <div className="text-xs text-terminal-muted/80">
+        <div className="text-xs dark:text-terminal-muted/80 light:text-light-muted/80">
           Seas are reported as significant wave height, which is the average of the highest third of the waves. Individual wave heights may be more than twice the significant wave height.
         </div>
       </footer>
