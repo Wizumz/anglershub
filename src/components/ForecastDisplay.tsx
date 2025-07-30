@@ -5,6 +5,7 @@ import {
   type TideData, 
   type TidePrediction 
 } from '../utils/tidesApi';
+import { weatherApiLimiter, tideApiLimiter } from '../utils/rateLimiter';
 
 interface WeatherForecast {
   date: string;
@@ -60,6 +61,12 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
     const fetchWeatherData = async () => {
       if (!latitude || !longitude) return;
       
+      const locationKey = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+      if (!weatherApiLimiter.canMakeRequest(locationKey)) {
+        console.log('Weather API rate limit exceeded, skipping request');
+        return;
+      }
+      
       setLoading(true);
       try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&timezone=America/New_York&forecast_days=7&temperature_unit=fahrenheit`;
@@ -82,6 +89,11 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
   // Fetch tide data
   useEffect(() => {
     if (!zoneCode) return;
+
+    if (!tideApiLimiter.canMakeRequest(zoneCode)) {
+      console.log('Tide API rate limit exceeded, skipping request');
+      return;
+    }
 
     fetchTideData(zoneCode, latitude, longitude)
       .then((data) => {
@@ -118,7 +130,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
   };
 
   const getTideIcon = (type: 'H' | 'L'): string => {
-    return type === 'H' ? '🌊' : '🏖️';
+    return type === 'H' ? '⬆️' : '⬇️';
   };
 
   const getTideLabel = (type: 'H' | 'L'): string => {
@@ -178,6 +190,90 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
     if (code >= 80 && code <= 82) return '🌦️';
     if (code >= 95 && code <= 99) return '⛈️';
     return isDay ? '🌤️' : '🌙';
+  };
+
+  // Calculate sea state based on wave height and period
+  const calculateSeaState = (seas: string, waveDetail?: string): { state: string; warning: boolean; description: string } => {
+    // Extract wave height from seas string (e.g., "3 to 5 ft" -> 5)
+    const heightMatch = seas.match(/(\d+(?:\.\d+)?)\s*(?:to\s*(\d+(?:\.\d+)?))?\s*ft/i);
+    let maxHeight = 0;
+    
+    if (heightMatch) {
+      maxHeight = heightMatch[2] ? parseFloat(heightMatch[2]) : parseFloat(heightMatch[1]);
+    }
+    
+    // Extract wave period from wave detail string (e.g., "Dominant period 6 seconds" -> 6)
+    let period = 0;
+    if (waveDetail) {
+      const periodMatch = waveDetail.match(/(\d+(?:\.\d+)?)\s*seconds?/i);
+      if (periodMatch) {
+        period = parseFloat(periodMatch[1]);
+      }
+    }
+    
+    // Determine if conditions are potentially dangerous
+    // Generally, wave period LESS than double the wave height (when waves > 3ft) is dangerous
+    const isDangerous = maxHeight > 3 && period > 0 && period < (maxHeight * 2);
+    
+    // Determine sea state based on wave height
+    let state = '';
+    let description = '';
+    
+    if (maxHeight < 1) {
+      state = 'Calm';
+      description = 'Mirror-like surface';
+    } else if (maxHeight < 2) {
+      state = 'Smooth';
+      description = 'Small wavelets';
+    } else if (maxHeight < 4) {
+      state = 'Slight';
+      description = 'Large wavelets to small waves';
+    } else if (maxHeight < 6) {
+      state = 'Moderate';
+      description = 'Small to moderate waves';
+    } else if (maxHeight < 9) {
+      state = 'Rough';
+      description = 'Moderate to large waves';
+    } else if (maxHeight < 14) {
+      state = 'Very Rough';
+      description = 'Large to very large waves';
+    } else {
+      state = 'High';
+      description = 'Very large to huge waves';
+    }
+    
+    // Add danger warning if applicable
+    if (isDangerous) {
+      description += ' - Potentially Dangerous Conditions';
+    }
+    
+    return {
+      state,
+      warning: isDangerous || maxHeight > 6,
+      description: `${description} (${maxHeight}ft${period > 0 ? ` @ ${period}s` : ''})`
+    };
+  };
+
+  // Check for Small Craft Advisory keywords
+  const checkSmallCraftAdvisory = (forecast: WeatherForecast): boolean => {
+    const advisoryKeywords = [
+      'small craft advisory', 
+      'sca', 
+      'advisory', 
+      'gale warning',
+      'storm warning',
+      'hazardous seas'
+    ];
+    
+    const textToCheck = [
+      forecast.winds,
+      forecast.seas,
+      forecast.waveDetail,
+      forecast.thunderstorms,
+      forecast.visibility
+    ].join(' ').toLowerCase();
+    
+    return advisoryKeywords.some(keyword => textToCheck.includes(keyword));
   };
 
 
@@ -259,7 +355,16 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
           Marine Zone: <span className="text-terminal-text">{selectedZone}</span>
         </div>
         <div className="text-terminal-muted text-sm">
-          Updated: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')} EST
+          Updated: {new Date().toLocaleString('en-US', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            timeZoneName: 'short',
+            hour12: false 
+          })}
         </div>
       </div>
 
@@ -269,6 +374,8 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
           const baseDate = new Date();
           const forecastDate = calculateForecastDate(forecast.period, baseDate);
           const weatherInfo = getWeatherForDate(forecastDate);
+          const seaState = calculateSeaState(forecast.seas, forecast.waveDetail);
+          const hasAdvisory = checkSmallCraftAdvisory(forecast);
           
           return (
             <div key={`${forecast.period}-${index}`} className="bg-terminal-bg-alt p-4 rounded-lg border border-terminal-fg/20">
@@ -300,6 +407,17 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                       <span>{forecast.seas}</span>
                     </div>
                   )}
+
+                  {/* Sea State Display */}
+                  <div>
+                    <span className="text-terminal-accent font-semibold">Sea State: </span>
+                    <span className={seaState.warning ? 'text-yellow-400 font-semibold' : ''}>
+                      {seaState.state}
+                    </span>
+                    {seaState.warning && (
+                      <span className="text-red-400 font-semibold ml-2">⚠️</span>
+                    )}
+                  </div>
                   
                   {forecast.waveDetail && (
                     <div>
@@ -323,6 +441,16 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                       </span>
                     </div>
                   )}
+
+                  {/* Small Craft Advisory Display */}
+                  {hasAdvisory && (
+                    <div className="col-span-full">
+                      <span className="text-terminal-accent font-semibold">Marine Advisory: </span>
+                      <span className="text-red-400 font-semibold inline-flex items-center gap-1">
+                        🚨 Small Craft Advisory in Effect
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -339,7 +467,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                       <div className="space-y-2 text-sm">
                         {weatherInfo.morningIndex >= 0 && (
                           <div className="flex items-center gap-2">
-                            <span className="text-terminal-accent font-semibold w-16">Morning:</span>
+                            <span className="text-terminal-accent font-semibold w-20 flex-shrink-0">Morning:</span>
                             <span className="text-lg">
                               {getWeatherIconFromCode(weatherData.hourly.weather_code[weatherInfo.morningIndex], weatherData.hourly.is_day[weatherInfo.morningIndex] === 1)}
                             </span>
@@ -351,7 +479,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                         
                         {weatherInfo.afternoonIndex >= 0 && (
                           <div className="flex items-center gap-2">
-                            <span className="text-terminal-accent font-semibold w-16">Afternoon:</span>
+                            <span className="text-terminal-accent font-semibold w-20 flex-shrink-0">Afternoon:</span>
                             <span className="text-lg">
                               {getWeatherIconFromCode(weatherData.hourly.weather_code[weatherInfo.afternoonIndex], weatherData.hourly.is_day[weatherInfo.afternoonIndex] === 1)}
                             </span>
@@ -362,7 +490,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                         )}
 
                         <div className="flex items-center gap-2">
-                          <span className="text-terminal-accent font-semibold w-16">Overall:</span>
+                          <span className="text-terminal-accent font-semibold w-20 flex-shrink-0">Overall:</span>
                           <span className="text-lg">
                             {getWeatherIconFromCode(weatherData.daily.weather_code[weatherInfo.dailyIndex], true)}
                           </span>

@@ -1,5 +1,40 @@
 const https = require('https');
 
+// Simple in-memory rate limiter
+const rateLimiter = {
+  requests: new Map(),
+  windowMs: 60000, // 1 minute window
+  maxRequests: 10, // Max 10 requests per minute per IP
+  
+  checkLimit(ip) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+    
+    // Clean old entries
+    for (const [key, timestamp] of this.requests.entries()) {
+      if (timestamp < windowStart) {
+        this.requests.delete(key);
+      }
+    }
+    
+    // Count requests for this IP in current window
+    let requestCount = 0;
+    for (const [key, timestamp] of this.requests.entries()) {
+      if (key.startsWith(ip + ':') && timestamp >= windowStart) {
+        requestCount++;
+      }
+    }
+    
+    if (requestCount >= this.maxRequests) {
+      return false; // Rate limit exceeded
+    }
+    
+    // Add this request
+    this.requests.set(`${ip}:${now}`, now);
+    return true; // Request allowed
+  }
+};
+
 exports.handler = async (event, context) => {
   // Enable CORS
   const headers = {
@@ -15,6 +50,19 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers,
       body: ''
+    };
+  }
+
+  // Rate limiting
+  const clientIP = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+  if (!rateLimiter.checkLimit(clientIP)) {
+    return {
+      statusCode: 429,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Rate limit exceeded. Please wait before making another request.',
+        retryAfter: 60 
+      })
     };
   }
 

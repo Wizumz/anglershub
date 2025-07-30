@@ -26,6 +26,10 @@ body {
   font-family: 'JetBrains Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.4;
+  /* Chrome-specific fixes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -109,4 +113,35 @@ body {
   21%, 62% {
     transform: translate(2px, 0);
   }
+}
+
+/* Chrome-specific compatibility fixes */
+* {
+  /* Fix for Chrome's handling of flexbox */
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+
+/* Fix Chrome's date/time input styling */
+input[type="date"], input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Chrome grid layout fixes */
+.grid {
+  display: -webkit-grid;
+  display: grid;
+}
+
+/* Chrome flexbox fixes */
+.flex {
+  display: -webkit-flex;
+  display: flex;
+}
+
+/* Fix Chrome's handling of transforms */
+.transform {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
