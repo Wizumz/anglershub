@@ -29,7 +29,7 @@ const ZONE_TO_TIDE_STATION: Record<string, string> = {
   'ANZ231': '8413320', // Bar Harbor, ME
   'ANZ232': '8410140', // Cutler Farris Wharf, ME
   'ANZ233': '8411060', // Cutler Naval Computer, ME
-  'ANZ234': '8412369', // Frenchman Bay, ME
+  'ANZ234': '8447930', // Woods Hole, MA (Vineyard Sound)
   'ANZ235': '8413320', // Bar Harbor, ME
   'ANZ236': '8416092', // Winter Harbor, ME
   'ANZ250': '8418150', // Eastport, ME
@@ -266,7 +266,8 @@ export const fetchTideData = async (zoneCode: string, latitude?: number, longitu
 
   } catch (error) {
     console.error('Error fetching NOAA tide data:', error);
-    // Don't return null here, fall through to Open-Meteo fallback
+    console.log(`NOAA failed for station ${stationId}, falling back to Open-Meteo...`);
+    // Fall through to Open-Meteo fallback
   }
   }
 

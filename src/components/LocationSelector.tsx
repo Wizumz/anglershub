@@ -53,20 +53,22 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
   // Filter zones based on input
   useEffect(() => {
     let filtered: MarineZone[];
+    const searchTerm = inputValue.toLowerCase().trim();
     
-    if (inputValue.trim() === '') {
+    if (searchTerm === '') {
       // When empty, show all zones
       filtered = [...zones];
     } else {
       // When typing, filter strictly
-      const searchTerm = inputValue.toLowerCase().trim();
       filtered = zones.filter(zone => {
         const codeMatch = zone.zone_code.toLowerCase().includes(searchTerm);
         const nameMatch = zone.location_name.toLowerCase().includes(searchTerm);
         return codeMatch || nameMatch;
       });
+    }
       
-             console.log('=== DROPDOWN FILTER DEBUG ===');
+    // ALWAYS debug when there's input or when showing all
+    console.log('=== DROPDOWN FILTER DEBUG ===');
        console.log('Search term:', searchTerm);
        console.log('Total zones:', zones.length);
        console.log('Filtered count:', filtered.length);
@@ -88,9 +90,8 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
            console.log(`⚠️  PROBLEM ZONE ${code} FOUND IN FILTERED:`, found.location_name);
            console.log(`    Code match: ${codeMatch}, Name match: ${nameMatch}`);
          }
-       });
-       console.log('========================');
-    }
+               });
+        console.log('========================');
     
     setFilteredZones(filtered);
     setHighlightedIndex(-1);
