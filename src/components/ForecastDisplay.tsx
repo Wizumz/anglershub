@@ -433,9 +433,11 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                     </div>
 
                     {/* Tide Information */}
-                    {tideData && (() => {
+                    {tideData ? (() => {
                       const dayTides = getTidesForDate(parseISO(forecastDate + 'T00:00:00'), tideData.predictions);
                       const tidalCoefficient = calculateTidalCoefficient(tideData.predictions);
+                      
+                      console.log('Tide data available:', tideData.stationName, 'Day tides:', dayTides.length);
                       
                       return (
                         <div className="space-y-3">
@@ -479,7 +481,14 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                           )}
                         </div>
                       );
-                    })()}
+                    })() : (
+                      <div className="space-y-3">
+                        <h5 className="text-terminal-accent text-sm font-medium">Tides (EST)</h5>
+                        <div className="text-xs text-terminal-muted">
+                          Loading tide data...
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

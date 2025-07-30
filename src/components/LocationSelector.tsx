@@ -30,6 +30,7 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
   const [favoriteZones, setFavoriteZones] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [userIsTyping, setUserIsTyping] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,13 +40,15 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Initialize input value with selected zone
+  // Initialize input value with selected zone (only when user hasn't started typing)
   useEffect(() => {
-    const selectedZoneObj = zones.find(zone => zone.zone_code === selectedZone);
-    if (selectedZoneObj) {
-      setInputValue(`${selectedZoneObj.zone_code} - ${selectedZoneObj.location_name}`);
+    if (!userIsTyping && selectedZone) {
+      const selectedZoneObj = zones.find(zone => zone.zone_code === selectedZone);
+      if (selectedZoneObj) {
+        setInputValue(`${selectedZoneObj.zone_code} - ${selectedZoneObj.location_name}`);
+      }
     }
-  }, [selectedZone, zones]);
+  }, [selectedZone, zones, userIsTyping]);
 
   // Filter zones based on input
   useEffect(() => {
@@ -64,13 +67,36 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+    setUserIsTyping(true);
     setShowDropdown(true);
+  };
+
+  // Handle input clear
+  const handleClearInput = () => {
+    setInputValue('');
+    setUserIsTyping(true);
+    setShowDropdown(true);
+    setHighlightedIndex(-1);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  // Handle input focus - clear if it contains a selection
+  const handleInputFocus = () => {
+    setShowDropdown(true);
+    // Clear input when focused if it contains a full selection (makes mobile easier)
+    if (inputValue.includes(' - ')) {
+      setInputValue('');
+      setUserIsTyping(true);
+    }
   };
 
   // Handle zone selection
   const handleZoneSelect = (zone: MarineZone) => {
     setInputValue(`${zone.zone_code} - ${zone.location_name}`);
     setShowDropdown(false);
+    setUserIsTyping(false);
     onZoneChange(zone.zone_code);
     setHighlightedIndex(-1);
     
@@ -230,15 +256,27 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => setShowDropdown(true)}
+          onFocus={handleInputFocus}
           placeholder="Search zones... (e.g., ANZ230, Boston Harbor, Cape Cod)"
           className="w-full p-3 bg-terminal-bg border border-terminal-border rounded focus:outline-none focus:ring-2 focus:ring-terminal-accent text-terminal-fg placeholder-terminal-muted font-mono"
           autoComplete="off"
         />
         
-        {/* Search Icon */}
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-terminal-muted">
-          🔍
+        {/* Search Icon / Clear Button */}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {inputValue ? (
+            <button
+              onClick={handleClearInput}
+              className="text-terminal-muted hover:text-terminal-accent transition-colors p-1"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          ) : (
+            <div className="text-terminal-muted">
+              🔍
+            </div>
+          )}
         </div>
       </div>
 
