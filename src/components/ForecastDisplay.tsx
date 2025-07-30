@@ -1,9 +1,7 @@
 import { format, parseISO, addDays } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { 
-  fetchTideData, 
-  calculateTidalCoefficient, 
-  getTidalCoefficientDescription,
+  fetchTideData,
   type TideData, 
   type TidePrediction 
 } from '../utils/tidesApi';
@@ -127,13 +125,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
     return type === 'H' ? 'High' : 'Low';
   };
 
-  const getTidalCoefficientColor = (coefficient: number): string => {
-    if (coefficient >= 95) return 'text-red-400';
-    if (coefficient >= 80) return 'text-orange-400';
-    if (coefficient >= 65) return 'text-yellow-400';
-    if (coefficient >= 45) return 'text-blue-400';
-    return 'text-gray-400';
-  };
+
 
   const getTidesForDate = (date: Date, tides: TidePrediction[]): TidePrediction[] => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -435,23 +427,10 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                     {/* Tide Information */}
                     {tideData ? (() => {
                       const dayTides = getTidesForDate(parseISO(forecastDate + 'T00:00:00'), tideData.predictions);
-                      const tidalCoefficient = calculateTidalCoefficient(tideData.predictions);
-                      
-                      console.log('Tide data available:', tideData.stationName, 'Day tides:', dayTides.length);
                       
                       return (
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-terminal-accent text-sm font-medium">Tides (EST)</h5>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-bold ${getTidalCoefficientColor(tidalCoefficient)}`}>
-                                {tidalCoefficient}
-                              </span>
-                              <span className="text-xs text-terminal-muted">
-                                {getTidalCoefficientDescription(tidalCoefficient)}
-                              </span>
-                            </div>
-                          </div>
+                          <h5 className="text-terminal-accent text-sm font-medium">Tides (EST)</h5>
                           
                           {dayTides.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -566,11 +545,10 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                   NOAA Station {tideData.stationId}
                 </a></div>
               </div>
-              <div className="space-y-1">
-                <div><span className="text-terminal-accent font-semibold">Datum:</span> {tideData.datum} (Mean Lower Low Water)</div>
-                <div><span className="text-terminal-accent font-semibold">Coefficients:</span> Tidal strength (20-120 scale)</div>
-                <div><span className="text-terminal-accent font-semibold">Timezone:</span> {tideData.timeZone}</div>
-              </div>
+                             <div className="space-y-1">
+                 <div><span className="text-terminal-accent font-semibold">Datum:</span> {tideData.datum} (Mean Lower Low Water)</div>
+                 <div><span className="text-terminal-accent font-semibold">Timezone:</span> {tideData.timeZone}</div>
+               </div>
             </div>
           </div>
         )}
