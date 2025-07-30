@@ -343,14 +343,54 @@ function parseMarineForecast(html) {
 
 // Helper functions to extract specific forecast components
 function extractWinds(text) {
-  // NOAA format: "SW winds 5 to 10 kt" or "NE winds around 5 kt"
-  const windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.,]*(?:kt|knots?|mph|kts)[^.,]*)/i);
-  return windMatch ? `${windMatch[1]} ${windMatch[2].trim()}` : '';
+  // Enhanced NOAA format: capture full wind description including additional conditions
+  // Examples: "SW winds 5 to 10 kt, BECOMING NW AFTER MIDNIGHT"
+  //          "NE winds 5 to 10 kt, INCREASING TO 10 TO 15 KT IN THE AFTERNOON"
+  //          "NE winds 10 to 15 kt. GUSTS UP TO 20 KT IN THE EVENING"
+  
+  // First try to match the main wind pattern and capture everything until a period or major break
+  let windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.]*?(?:kt|knots?|mph|kts)[^.]*?)(?:\.|$|(?=\s+[A-Z][a-z]+\s+(?:around|1|2|3|4|5|6|7|8|9)))/i);
+  
+  if (windMatch) {
+    let fullWindText = `${windMatch[1]} winds ${windMatch[2].trim()}`;
+    
+    // Clean up and ensure proper formatting
+    fullWindText = fullWindText
+      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/kt\s*,?\s*([A-Z])/g, 'kt, $1')  // ensure comma after kt before capitalized conditions
+      .trim();
+    
+    return fullWindText;
+  }
+  
+  // Fallback to simpler pattern if complex one fails
+  windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.,]*(?:kt|knots?|mph|kts)[^.,]*)/i);
+  return windMatch ? `${windMatch[1]} winds ${windMatch[2].trim()}` : '';
 }
 
 function extractSeas(text) {
-  // NOAA format: "Seas 1 ft or less" or "Waves around 2 ft" - handle both
-  let seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  // Enhanced NOAA format: capture full sea/wave description including additional conditions
+  // Examples: "Waves 1 foot or less"
+  //          "WAVES AROUND 2 FT IN THE EVENING, THEN 1 FOOT OR LESS"
+  //          "Seas 2 to 4 ft, BUILDING TO 4 TO 6 FT"
+  
+  // First try to match seas/waves pattern and capture everything until a period or major break
+  let seasMatch = text.match(/(?:seas?|waves?)\s+([^.]*?(?:ft|feet|foot)[^.]*?)(?:\.|$|(?=\s+[A-Z][a-z]+\s+(?:around|1|2|3|4|5|6|7|8|9|[NSEW])))/i);
+  
+  if (seasMatch) {
+    let fullSeasText = seasMatch[1].trim();
+    
+    // Clean up and ensure proper formatting
+    fullSeasText = fullSeasText
+      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/ft\s*,?\s*([A-Z])/g, 'ft, $1')  // ensure comma after ft before capitalized conditions
+      .trim();
+    
+    return fullSeasText;
+  }
+  
+  // Fallback to simpler pattern if complex one fails
+  seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
   
   // Fallback to "Waves" if "Seas" not found
   if (!seasMatch) {
