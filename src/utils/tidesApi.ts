@@ -132,9 +132,10 @@ const fetchMeteoTideData = async (latitude: number, longitude: number): Promise<
   try {
     const url = `https://api.open-meteo.com/v1/marine?` +
       `latitude=${latitude}&longitude=${longitude}&` +
-      `hourly=sea_surface_temperature,sea_level_height_msl&` +
+      `hourly=sea_level_height_msl&` +
       `timezone=America/New_York&forecast_days=7`;
 
+    console.log('Open-Meteo URL:', url);
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -142,8 +143,10 @@ const fetchMeteoTideData = async (latitude: number, longitude: number): Promise<
     }
 
     const data = await response.json();
+    console.log('Open-Meteo response data:', data);
     
     if (!data.hourly?.sea_level_height_msl) {
+      console.error('Open-Meteo response missing sea_level_height_msl:', data);
       throw new Error('No sea level data available from Open-Meteo');
     }
 
@@ -152,20 +155,25 @@ const fetchMeteoTideData = async (latitude: number, longitude: number): Promise<
     const times = data.hourly.time;
     const levels = data.hourly.sea_level_height_msl;
     
+    console.log('Sea level data points:', levels.length);
+    console.log('First 10 levels:', levels.slice(0, 10));
+    
     // Convert meters to feet and find high/low tides
     for (let i = 1; i < levels.length - 1; i++) {
       const prev = levels[i - 1];
       const curr = levels[i];
       const next = levels[i + 1];
       
+      if (prev === null || curr === null || next === null) continue;
+      
       // Find local maxima (high tide) and minima (low tide)
-      if (curr > prev && curr > next && curr > 0.1) { // High tide
+      if (curr > prev && curr > next && Math.abs(curr) > 0.05) { // High tide
         predictions.push({
           time: times[i],
           value: parseFloat((curr * 3.28084).toFixed(2)), // Convert m to ft
           type: 'H'
         });
-      } else if (curr < prev && curr < next) { // Low tide
+      } else if (curr < prev && curr < next && Math.abs(curr) < 10) { // Low tide
         predictions.push({
           time: times[i],
           value: parseFloat((curr * 3.28084).toFixed(2)), // Convert m to ft
@@ -173,6 +181,9 @@ const fetchMeteoTideData = async (latitude: number, longitude: number): Promise<
         });
       }
     }
+    
+    console.log('Found tide predictions:', predictions.length);
+    console.log('Predictions:', predictions);
 
     return {
       stationId: 'meteo-fallback',

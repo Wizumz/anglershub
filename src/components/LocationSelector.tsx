@@ -66,15 +66,30 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
         return codeMatch || nameMatch;
       });
       
-      console.log('=== DROPDOWN FILTER DEBUG ===');
-      console.log('Search term:', searchTerm);
-      console.log('Total zones:', zones.length);
-      console.log('Filtered count:', filtered.length);
-      console.log('First 10 filtered:');
-      filtered.slice(0, 10).forEach((zone, i) => {
-        console.log(`  ${i + 1}. ${zone.zone_code} - ${zone.location_name}`);
-      });
-      console.log('========================');
+             console.log('=== DROPDOWN FILTER DEBUG ===');
+       console.log('Search term:', searchTerm);
+       console.log('Total zones:', zones.length);
+       console.log('Filtered count:', filtered.length);
+       console.log('First 10 filtered:');
+       filtered.slice(0, 10).forEach((zone, i) => {
+         const codeMatch = zone.zone_code.toLowerCase().includes(searchTerm);
+         const nameMatch = zone.location_name.toLowerCase().includes(searchTerm);
+         console.log(`  ${i + 1}. ${zone.zone_code} - ${zone.location_name}`);
+         console.log(`     Code match: ${codeMatch}, Name match: ${nameMatch}`);
+       });
+       
+       // Special check for ANZ150-154
+       const problemZones = ['ANZ150', 'ANZ152', 'ANZ154'];
+       problemZones.forEach(code => {
+         const found = filtered.find(z => z.zone_code === code);
+         if (found) {
+           const codeMatch = found.zone_code.toLowerCase().includes(searchTerm);
+           const nameMatch = found.location_name.toLowerCase().includes(searchTerm);
+           console.log(`⚠️  PROBLEM ZONE ${code} FOUND IN FILTERED:`, found.location_name);
+           console.log(`    Code match: ${codeMatch}, Name match: ${nameMatch}`);
+         }
+       });
+       console.log('========================');
     }
     
     setFilteredZones(filtered);
