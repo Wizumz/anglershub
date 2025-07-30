@@ -88,7 +88,10 @@ const ZONE_TO_TIDE_STATION: Record<string, string> = {
   'ANZ736': '8571892', // Wachapreague, VA
   'ANZ737': '8638863', // Chesapeake Bay Bridge Tunnel, VA
   
-  // North Carolina
+  // North Carolina (Fixed duplicate codes)
+  'ANZ350': '8652587', // Oregon Inlet Marina, NC (was ANZ150)
+  'ANZ352': '8654467', // Hatteras, NC (was ANZ152)
+  'ANZ354': '8656483', // Beaufort, NC (was ANZ154)
   'ANZ830': '8652587', // Oregon Inlet Marina, NC
   'ANZ831': '8654467', // Hatteras, NC
   'ANZ832': '8656483', // Beaufort, NC

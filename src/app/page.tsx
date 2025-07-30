@@ -112,10 +112,10 @@ const MARINE_ZONES: MarineZone[] = [
   { zone_code: 'ANZ136', location_name: 'Pamlico and Pungo Rivers', synopsis_zone: 'ANZ100', latitude: 35.450, longitude: -76.650 },
   { zone_code: 'ANZ137', location_name: 'Neuse and Bay Rivers', synopsis_zone: 'ANZ100', latitude: 35.150, longitude: -76.800 },
 
-  // North Carolina Coastal Waters (Different ANZ100 entries)
-  { zone_code: 'ANZ150', location_name: 'Coastal waters from Currituck Beach Light to Oregon Inlet NC out 20 nm', synopsis_zone: 'ANZ100', latitude: 36.000, longitude: -75.400 },
-  { zone_code: 'ANZ152', location_name: 'Coastal waters from Oregon Inlet to Cape Hatteras NC out 20 nm', synopsis_zone: 'ANZ100', latitude: 35.650, longitude: -75.200 },
-  { zone_code: 'ANZ154', location_name: 'Coastal waters from Cape Hatteras to Ocracoke Inlet NC out 20 nm', synopsis_zone: 'ANZ100', latitude: 35.400, longitude: -75.300 },
+  // North Carolina Coastal Waters (Fixed zone codes to avoid duplicates)
+  { zone_code: 'ANZ350', location_name: 'Coastal waters from Currituck Beach Light to Oregon Inlet NC out 20 nm', synopsis_zone: 'ANZ300', latitude: 36.000, longitude: -75.400 },
+  { zone_code: 'ANZ352', location_name: 'Coastal waters from Oregon Inlet to Cape Hatteras NC out 20 nm', synopsis_zone: 'ANZ300', latitude: 35.650, longitude: -75.200 },
+  { zone_code: 'ANZ354', location_name: 'Coastal waters from Cape Hatteras to Ocracoke Inlet NC out 20 nm', synopsis_zone: 'ANZ300', latitude: 35.400, longitude: -75.300 },
   { zone_code: 'ANZ156', location_name: 'Coastal waters from Ocracoke Inlet to Cape Lookout NC out 20 nm', synopsis_zone: 'ANZ100', latitude: 35.000, longitude: -75.800 },
   { zone_code: 'ANZ158', location_name: 'Coastal waters from Cape Lookout to Surf City NC out 20 nm', synopsis_zone: 'ANZ100', latitude: 34.600, longitude: -76.600 },
 
