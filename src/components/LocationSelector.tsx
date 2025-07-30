@@ -166,10 +166,10 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
         {selectedZone && (
           <button
             onClick={() => handleFavoriteToggle(selectedZone)}
-            className={`text-lg transition-colors ${
+            className={`text-2xl px-2 py-1 rounded transition-all hover:scale-110 ${
               isFavoriteZone(selectedZone) 
-                ? 'text-yellow-400 hover:text-yellow-500' 
-                : 'text-terminal-muted hover:text-yellow-400'
+                ? 'text-yellow-400 hover:text-yellow-500 hover:bg-yellow-400/10' 
+                : 'text-terminal-muted hover:text-yellow-400 hover:bg-yellow-400/5'
             }`}
             title={isFavoriteZone(selectedZone) ? 'Remove from favorites' : 'Add to favorites'}
           >
@@ -272,7 +272,7 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
                            {zone.zone_code}
                          </span>
                          {favoriteZones.includes(zone.zone_code) && (
-                           <span className={`text-sm ${index === highlightedIndex ? 'text-yellow-200' : 'text-yellow-400'}`}>
+                           <span className={`text-lg ${index === highlightedIndex ? 'text-yellow-200' : 'text-yellow-400'}`}>
                              ★
                            </span>
                          )}
@@ -295,10 +295,10 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
                            e.stopPropagation();
                            handleFavoriteToggle(zone.zone_code);
                          }}
-                         className={`text-sm transition-colors ${
+                         className={`text-xl px-2 py-1 rounded transition-all hover:scale-110 ${
                            favoriteZones.includes(zone.zone_code)
-                             ? (index === highlightedIndex ? 'text-yellow-200 hover:text-yellow-100' : 'text-yellow-400 hover:text-yellow-500')
-                             : (index === highlightedIndex ? 'text-terminal-bg/50 hover:text-yellow-200' : 'text-terminal-muted hover:text-yellow-400')
+                             ? (index === highlightedIndex ? 'text-yellow-200 hover:text-yellow-100 hover:bg-yellow-200/10' : 'text-yellow-400 hover:text-yellow-500 hover:bg-yellow-400/10')
+                             : (index === highlightedIndex ? 'text-terminal-bg/50 hover:text-yellow-200 hover:bg-yellow-200/10' : 'text-terminal-muted hover:text-yellow-400 hover:bg-yellow-400/5')
                          }`}
                          title={favoriteZones.includes(zone.zone_code) ? 'Remove from favorites' : 'Add to favorites'}
                        >

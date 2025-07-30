@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
+import TidesDisplay from '../components/TidesDisplay';
 import PWAManager from '../components/PWAManager';
 
 interface WeatherForecast {
@@ -425,6 +426,16 @@ export default function Home() {
           <div className="text-terminal-text text-sm leading-relaxed">
             {synopsis}
           </div>
+        </div>
+      )}
+
+      {/* Tide Information */}
+      {selectedZone && !loading && (
+        <div className="mb-6">
+          <TidesDisplay 
+            zoneCode={selectedZone}
+            zoneName={zones.find(z => z.zone_code === selectedZone)?.location_name || selectedZone}
+          />
         </div>
       )}
 
