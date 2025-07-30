@@ -52,19 +52,32 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
 
   // Filter zones based on input
   useEffect(() => {
+    let filtered: MarineZone[];
+    
     if (inputValue.trim() === '') {
-      setFilteredZones(zones);
+      // When empty, show all zones
+      filtered = [...zones];
     } else {
-      const filtered = zones.filter(zone => 
-        zone.zone_code.toLowerCase().includes(inputValue.toLowerCase()) ||
-        zone.location_name.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      console.log('INPUT:', inputValue);
-      console.log('ZONES TOTAL:', zones.length);
-      console.log('FILTERED COUNT:', filtered.length);
-      console.log('FIRST 5 FILTERED:', filtered.slice(0, 5).map(z => `${z.zone_code} - ${z.location_name}`));
-      setFilteredZones(filtered);
+      // When typing, filter strictly
+      const searchTerm = inputValue.toLowerCase().trim();
+      filtered = zones.filter(zone => {
+        const codeMatch = zone.zone_code.toLowerCase().includes(searchTerm);
+        const nameMatch = zone.location_name.toLowerCase().includes(searchTerm);
+        return codeMatch || nameMatch;
+      });
+      
+      console.log('=== DROPDOWN FILTER DEBUG ===');
+      console.log('Search term:', searchTerm);
+      console.log('Total zones:', zones.length);
+      console.log('Filtered count:', filtered.length);
+      console.log('First 10 filtered:');
+      filtered.slice(0, 10).forEach((zone, i) => {
+        console.log(`  ${i + 1}. ${zone.zone_code} - ${zone.location_name}`);
+      });
+      console.log('========================');
     }
+    
+    setFilteredZones(filtered);
     setHighlightedIndex(-1);
   }, [inputValue, zones]);
 

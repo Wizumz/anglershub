@@ -83,14 +83,14 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
   useEffect(() => {
     if (!zoneCode) return;
 
-    fetchTideData(zoneCode)
+    fetchTideData(zoneCode, latitude, longitude)
       .then((data) => {
         setTideData(data);
       })
       .catch((err) => {
         console.error('Tide data error:', err);
       });
-  }, [zoneCode]);
+  }, [zoneCode, latitude, longitude]);
 
   // Convert Celsius to Fahrenheit
   const celsiusToFahrenheit = (celsius: number): number => {

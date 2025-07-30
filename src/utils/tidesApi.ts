@@ -127,12 +127,74 @@ const ZONE_TO_TIDE_STATION: Record<string, string> = {
 
 
 
-export const fetchTideData = async (zoneCode: string): Promise<TideData | null> => {
-  const stationId = ZONE_TO_TIDE_STATION[zoneCode];
-  if (!stationId) {
-    console.warn(`No tide station found for zone ${zoneCode}`);
+// Fetch tide data from Open-Meteo as fallback
+const fetchMeteoTideData = async (latitude: number, longitude: number): Promise<TideData | null> => {
+  try {
+    const url = `https://api.open-meteo.com/v1/marine?` +
+      `latitude=${latitude}&longitude=${longitude}&` +
+      `hourly=sea_surface_temperature,sea_level_height_msl&` +
+      `timezone=America/New_York&forecast_days=7`;
+
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Open-Meteo Marine API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.hourly?.sea_level_height_msl) {
+      throw new Error('No sea level data available from Open-Meteo');
+    }
+
+    // Convert sea level data to tide predictions
+    const predictions: TidePrediction[] = [];
+    const times = data.hourly.time;
+    const levels = data.hourly.sea_level_height_msl;
+    
+    // Convert meters to feet and find high/low tides
+    for (let i = 1; i < levels.length - 1; i++) {
+      const prev = levels[i - 1];
+      const curr = levels[i];
+      const next = levels[i + 1];
+      
+      // Find local maxima (high tide) and minima (low tide)
+      if (curr > prev && curr > next && curr > 0.1) { // High tide
+        predictions.push({
+          time: times[i],
+          value: parseFloat((curr * 3.28084).toFixed(2)), // Convert m to ft
+          type: 'H'
+        });
+      } else if (curr < prev && curr < next) { // Low tide
+        predictions.push({
+          time: times[i],
+          value: parseFloat((curr * 3.28084).toFixed(2)), // Convert m to ft
+          type: 'L'
+        });
+      }
+    }
+
+    return {
+      stationId: 'meteo-fallback',
+      stationName: `Open-Meteo Marine Data (${latitude.toFixed(2)}°N, ${Math.abs(longitude).toFixed(2)}°W)`,
+      predictions,
+      datum: 'MSL',
+      units: 'feet',
+      timeZone: 'America/New_York',
+      disclaimer: 'Tide predictions from Open-Meteo Marine Weather API using global ocean models'
+    };
+
+  } catch (error) {
+    console.error('Error fetching Open-Meteo tide data:', error);
     return null;
   }
+};
+
+export const fetchTideData = async (zoneCode: string, latitude?: number, longitude?: number): Promise<TideData | null> => {
+  const stationId = ZONE_TO_TIDE_STATION[zoneCode];
+  
+  // Try NOAA first if station available
+  if (stationId) {
 
   try {
     // Get predictions for next 7 days
@@ -192,9 +254,19 @@ export const fetchTideData = async (zoneCode: string): Promise<TideData | null> 
     };
 
   } catch (error) {
-    console.error('Error fetching tide data:', error);
-    return null;
+    console.error('Error fetching NOAA tide data:', error);
+    // Don't return null here, fall through to Open-Meteo fallback
   }
+  }
+
+  // Fallback to Open-Meteo if NOAA station not available or failed
+  if (latitude !== undefined && longitude !== undefined) {
+    console.log(`Using Open-Meteo fallback for zone ${zoneCode}`);
+    return await fetchMeteoTideData(latitude, longitude);
+  }
+
+  console.warn(`No tide data available for zone ${zoneCode} - no NOAA station and no coordinates provided`);
+  return null;
 };
 
 export type { TideData, TidePrediction, TideStation };
