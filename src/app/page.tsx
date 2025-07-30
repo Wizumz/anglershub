@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
+import DetailedWeather from '../components/DetailedWeather';
 
 interface WeatherForecast {
   date: string;
@@ -14,119 +15,150 @@ interface WeatherForecast {
   thunderstorms?: string;
   visibility?: string;
   description: string;
-  summary?: {
-    type: string;
-    icon: string;
-    text: string;
-    color: string;
-    bold: boolean;
-  };
 }
 
 interface MarineZone {
   zone_code: string;
   location_name: string;
   synopsis_zone: string;
+  latitude?: number;
+  longitude?: number;
 }
 
-// Corrected marine zones data from NOAA
+// Corrected marine zones data from NOAA with approximate coordinates
 const MARINE_ZONES: MarineZone[] = [
   // New England / Boston Area
   {
     zone_code: 'ANZ230',
     location_name: 'Boston Harbor',
-    synopsis_zone: 'ANZ200'
+    synopsis_zone: 'ANZ200',
+    latitude: 42.354,
+    longitude: -71.065
   },
   {
     zone_code: 'ANZ231',
     location_name: 'Cape Cod Bay',
-    synopsis_zone: 'ANZ200'
+    synopsis_zone: 'ANZ200',
+    latitude: 41.920,
+    longitude: -70.280
   },
   {
     zone_code: 'ANZ233',
     location_name: 'Nantucket Sound',
-    synopsis_zone: 'ANZ200'
+    synopsis_zone: 'ANZ200',
+    latitude: 41.340,
+    longitude: -70.450
   },
   {
     zone_code: 'ANZ251',
     location_name: 'Massachusetts Bay and Ipswich Bay',
-    synopsis_zone: 'ANZ200'
+    synopsis_zone: 'ANZ200',
+    latitude: 42.450,
+    longitude: -70.650
   },
   // Long Island Sound / New York Area
   {
     zone_code: 'ANZ330',
     location_name: 'Long Island Sound East of New Haven CT/Port Jefferson NY',
-    synopsis_zone: 'ANZ300'
+    synopsis_zone: 'ANZ300',
+    latitude: 41.285,
+    longitude: -72.200
   },
   {
     zone_code: 'ANZ335',
     location_name: 'Long Island Sound West of New Haven CT/Port Jefferson NY',
-    synopsis_zone: 'ANZ300'
+    synopsis_zone: 'ANZ300',
+    latitude: 40.950,
+    longitude: -73.440
   },
   {
     zone_code: 'ANZ338',
     location_name: 'New York Harbor',
-    synopsis_zone: 'ANZ300'
+    synopsis_zone: 'ANZ300',
+    latitude: 40.670,
+    longitude: -74.040
   },
   {
     zone_code: 'ANZ340',
     location_name: 'Peconic and Gardiners Bays',
-    synopsis_zone: 'ANZ300'
+    synopsis_zone: 'ANZ300',
+    latitude: 41.000,
+    longitude: -72.320
   },
   // New Jersey / Delaware Area
   {
     zone_code: 'ANZ430',
     location_name: 'Delaware Bay waters north of East Point NJ to Slaughter Beach DE',
-    synopsis_zone: 'ANZ400'
+    synopsis_zone: 'ANZ400',
+    latitude: 39.200,
+    longitude: -75.180
   },
   {
     zone_code: 'ANZ450',
     location_name: 'Coastal waters from Sandy Hook to Manasquan Inlet NJ out 20 nm',
-    synopsis_zone: 'ANZ400'
+    synopsis_zone: 'ANZ400',
+    latitude: 40.250,
+    longitude: -73.850
   },
   // Chesapeake Bay / Virginia Area
   {
     zone_code: 'ANZ630',
     location_name: 'Chesapeake Bay from Smith Point to Windmill Point VA',
-    synopsis_zone: 'ANZ600'
+    synopsis_zone: 'ANZ600',
+    latitude: 37.870,
+    longitude: -76.230
   },
   {
     zone_code: 'ANZ632',
     location_name: 'Chesapeake Bay from New Point Comfort to Little Creek VA',
-    synopsis_zone: 'ANZ600'
+    synopsis_zone: 'ANZ600',
+    latitude: 37.050,
+    longitude: -76.300
   },
   // North Carolina Area
   {
     zone_code: 'ANZ130',
     location_name: 'Albemarle Sound',
-    synopsis_zone: 'ANZ100'
+    synopsis_zone: 'ANZ100',
+    latitude: 36.000,
+    longitude: -76.000
   },
   {
     zone_code: 'ANZ135',
     location_name: 'Pamlico Sound',
-    synopsis_zone: 'ANZ100'
+    synopsis_zone: 'ANZ100',
+    latitude: 35.400,
+    longitude: -75.900
   },
   // South Carolina / Georgia Area
   {
     zone_code: 'AMZ330',
     location_name: 'Charleston Harbor',
-    synopsis_zone: 'AMZ300'
+    synopsis_zone: 'AMZ300',
+    latitude: 32.780,
+    longitude: -79.930
   },
   {
     zone_code: 'AMZ350',
     location_name: 'Coastal waters from South Santee River SC to Edisto Beach SC out 20 nm',
-    synopsis_zone: 'AMZ300'
+    synopsis_zone: 'AMZ300',
+    latitude: 32.950,
+    longitude: -79.650
   },
   // Florida East Coast
   {
     zone_code: 'AMZ552',
     location_name: 'Volusia-Brevard County Line to Sebastian Inlet 0-20 nm',
-    synopsis_zone: 'AMZ500'
+    synopsis_zone: 'AMZ500',
+    latitude: 28.100,
+    longitude: -80.450
   },
   {
     zone_code: 'AMZ650',
     location_name: 'Coastal waters from Jupiter Inlet to Deerfield Beach FL out 20 nm',
-    synopsis_zone: 'AMZ101'
+    synopsis_zone: 'AMZ101',
+    latitude: 26.550,
+    longitude: -80.080
   }
 ];
 
@@ -377,6 +409,20 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Detailed Weather Section */}
+      {selectedZone && !loading && (() => {
+        const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
+        return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
+          <div className="mb-6">
+            <DetailedWeather 
+              latitude={selectedMarineZone.latitude} 
+              longitude={selectedMarineZone.longitude}
+              selectedZone={selectedZone}
+            />
+          </div>
+        ) : null;
+      })()}
 
       {/* Synopsis Section */}
       {synopsis && !loading && (

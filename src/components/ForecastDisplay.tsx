@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { getForecastSummary, getTierColorClass } from '../utils/forecastSummary';
 
 interface WeatherForecast {
   date: string;
@@ -10,13 +9,6 @@ interface WeatherForecast {
   thunderstorms?: string;
   visibility?: string;
   description: string;
-  summary?: {
-    type: string;
-    icon: string;
-    text: string;
-    color: string;
-    bold: boolean;
-  };
 }
 
 interface ForecastDisplayProps {
@@ -60,33 +52,6 @@ export default function ForecastDisplay({ forecasts, selectedZone }: ForecastDis
               </h3>
             </div>
             
-            {/* Summary Section - Enhanced 5-Tier Decision Tree Results */}
-            <div className="mb-4 p-3 rounded-lg bg-terminal-bg border border-terminal-fg/30">
-              <div className="text-terminal-accent font-semibold mb-2">Summary</div>
-              {(() => {
-                // Generate enhanced forecast summary using the new 5-tier system
-                const combinedText = [
-                  forecast.description,
-                  forecast.winds,
-                  forecast.seas,
-                  forecast.waveDetail,
-                  forecast.thunderstorms,
-                  forecast.visibility
-                ].filter(Boolean).join(' ');
-                
-                const enhancedSummary = getForecastSummary(combinedText);
-                const colorClass = getTierColorClass(enhancedSummary.tier);
-                
-                return (
-                  <div className={`flex items-center gap-2 ${colorClass} font-medium`}>
-                    <span className="text-xl">{enhancedSummary.emoji}</span>
-                    <span>{enhancedSummary.text}</span>
-                    <span className="text-xs opacity-70">({enhancedSummary.tier.toUpperCase()})</span>
-                  </div>
-                );
-              })()}
-            </div>
-
             {/* Inline Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
               {forecast.description && (
