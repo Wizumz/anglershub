@@ -385,14 +385,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="bg-terminal-bg-alt p-4 rounded-lg border border-terminal-fg/20">
-          <h2 className="text-terminal-accent mb-3 font-semibold">
-            <span className="text-terminal-success">$</span> CURRENT FORECAST
-          </h2>
-          <div className="text-terminal-muted text-sm">
-            Forecast is for today's date: {format(new Date(), 'yyyy-MM-dd')}
-          </div>
-        </div>
+
       </div>
 
       {/* Error Display */}
