@@ -103,6 +103,34 @@ export default function ForecastDisplay({ forecasts, selectedZone }: ForecastDis
           </div>
         ))}
       </div>
+
+      {/* Source Attribution */}
+      <div className="mt-6 pt-4 border-t border-terminal-fg/20">
+        <h4 className="text-terminal-accent font-medium mb-3">Marine Forecast Data Source</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-terminal-muted">
+          <div className="space-y-1">
+            <div><span className="text-terminal-accent font-semibold">Source:</span> NOAA National Weather Service</div>
+            <div><span className="text-terminal-accent font-semibold">Zone:</span> {selectedZone}</div>
+            <div><span className="text-terminal-accent font-semibold">Official URL:</span> <a 
+              href={`https://forecast.weather.gov/shmrn.php?mz=${selectedZone.toLowerCase()}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-terminal-success hover:underline"
+            >
+              NOAA Marine Forecast
+            </a></div>
+          </div>
+          <div className="space-y-1">
+            <div><span className="text-terminal-accent font-semibold">Update Frequency:</span> Multiple times daily</div>
+            <div><span className="text-terminal-accent font-semibold">Coverage:</span> US Coastal Waters</div>
+            <div><span className="text-terminal-accent font-semibold">Authority:</span> National Weather Service</div>
+          </div>
+        </div>
+        <div className="mt-3 text-xs text-terminal-muted">
+          <span className="text-terminal-warning">⚠️ Official Source:</span> This data is sourced directly from NOAA's National Weather Service marine forecasting system. 
+          For the most current conditions and any watches/warnings, always check the official NOAA marine forecast link above.
+        </div>
+      </div>
     </div>
   );
 }

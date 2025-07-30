@@ -411,7 +411,7 @@ export default function Home() {
       )}
 
       {/* Detailed Weather Section */}
-      {selectedZone && !loading && (() => {
+      {selectedZone && !loading && forecasts.length > 0 && (() => {
         const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
         return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
           <div className="mb-6">
@@ -419,6 +419,7 @@ export default function Home() {
               latitude={selectedMarineZone.latitude} 
               longitude={selectedMarineZone.longitude}
               selectedZone={selectedZone}
+              forecasts={forecasts}
             />
           </div>
         ) : null;
