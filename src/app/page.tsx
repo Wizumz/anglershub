@@ -5,6 +5,8 @@ import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
 import PWAManager from '../components/PWAManager';
+import { marineApiLimiter } from '../utils/rateLimiter';
+import { initChromeCompatibility } from '../utils/browserDetection';
 
 interface WeatherForecast {
   date: string;
@@ -181,11 +183,14 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const [synopsis, setSynopsis] = useState<string>('');
 
-  // Set initial zone
+  // Set initial zone and initialize Chrome compatibility
   useEffect(() => {
     if (zones.length > 0) {
       setSelectedZone(zones[0].zone_code);
     }
+    
+    // Initialize Chrome compatibility fixes
+    initChromeCompatibility();
   }, [zones]);
 
   const generateSampleForecast = useCallback((zoneCode: string) => {
@@ -274,6 +279,12 @@ export default function Home() {
       });
 
       if (isNetlify) {
+        // Check rate limit before making API call
+        if (!marineApiLimiter.canMakeRequest(selectedZone)) {
+          const waitTime = Math.ceil(marineApiLimiter.getTimeUntilReset(selectedZone) / 1000);
+          throw new Error(`Rate limit exceeded. Please wait ${waitTime} seconds before requesting new data.`);
+        }
+        
         // Use real NOAA data via Netlify serverless function
         const apiUrl = `/api/marine-forecast?mz=${selectedZone}&syn=${selectedMarineZone.synopsis_zone}`;
         
@@ -364,7 +375,16 @@ export default function Home() {
             NOAA MARINE WEATHER
           </h1>
           <div className="text-terminal-muted text-sm">
-            {format(new Date(), 'yyyy-MM-dd HH:mm:ss')} UTC
+            {new Date().toLocaleString('en-US', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit', 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              second: '2-digit',
+              timeZoneName: 'short',
+              hour12: false 
+            })}
           </div>
         </div>
         <div className="mt-2 text-terminal-muted">
