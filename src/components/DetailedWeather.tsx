@@ -112,7 +112,7 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
       
       try {
         // Request up to 7 days to cover all NOAA forecast periods
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&timezone=auto&forecast_days=7`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,relative_humidity_2m,pressure_msl,weather_code,is_day&timezone=America/New_York&forecast_days=7&temperature_unit=fahrenheit`;
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -169,7 +169,8 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
     return new Date(dateTimeStr).toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
-      hour12: true 
+      hour12: true,
+      timeZone: 'America/New_York'
     });
   };
 
@@ -300,13 +301,13 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
                     <div>
                       <span className="text-terminal-accent font-semibold">High: </span>
                       <span className="text-red-400">
-                        {Math.round(weatherData.daily.temperature_2m_max[dailyIndex])}°C
+                                                     {Math.round(weatherData.daily.temperature_2m_max[dailyIndex])}°F
                       </span>
                     </div>
                     <div>
                       <span className="text-terminal-accent font-semibold">Low: </span>
                       <span className="text-blue-400">
-                        {Math.round(weatherData.daily.temperature_2m_min[dailyIndex])}°C
+                                                     {Math.round(weatherData.daily.temperature_2m_min[dailyIndex])}°F
                       </span>
                     </div>
                     

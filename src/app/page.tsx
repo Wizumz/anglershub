@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
-import DetailedWeather from '../components/DetailedWeather';
 
 interface WeatherForecast {
   date: string;
@@ -410,20 +409,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Detailed Weather Section */}
-      {selectedZone && !loading && forecasts.length > 0 && (() => {
-        const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
-        return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
-          <div className="mb-6">
-            <DetailedWeather 
-              latitude={selectedMarineZone.latitude} 
-              longitude={selectedMarineZone.longitude}
-              selectedZone={selectedZone}
-              forecasts={forecasts}
-            />
-          </div>
-        ) : null;
-      })()}
+
 
       {/* Synopsis Section */}
       {synopsis && !loading && (
@@ -438,14 +424,34 @@ export default function Home() {
       )}
 
       {/* Detailed Forecast */}
-      {forecasts.length > 0 && !loading && (
-        <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
-          <h2 className="text-terminal-accent mb-4 font-semibold">
-            <span className="text-terminal-success">$</span> MARINE FORECAST
-          </h2>
-          <ForecastDisplay forecasts={forecasts} selectedZone={selectedZone} />
-        </div>
-      )}
+      {forecasts.length > 0 && !loading && (() => {
+        const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
+        return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
+          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
+            <h2 className="text-terminal-accent mb-4 font-semibold">
+              <span className="text-terminal-success">$</span> MARINE FORECAST
+            </h2>
+            <ForecastDisplay 
+              forecasts={forecasts} 
+              selectedZone={selectedZone}
+              latitude={selectedMarineZone.latitude}
+              longitude={selectedMarineZone.longitude}
+            />
+          </div>
+        ) : (
+          <div className="border border-terminal-border bg-terminal-bg-alt p-4 rounded">
+            <h2 className="text-terminal-accent mb-4 font-semibold">
+              <span className="text-terminal-success">$</span> MARINE FORECAST
+            </h2>
+            <ForecastDisplay 
+              forecasts={forecasts} 
+              selectedZone={selectedZone}
+              latitude={0}
+              longitude={0}
+            />
+          </div>
+        );
+      })()}
 
       {/* Footer */}
       <footer className="mt-8 pt-6 border-t border-terminal-fg/20 text-center text-sm text-terminal-muted">
