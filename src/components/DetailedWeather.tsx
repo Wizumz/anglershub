@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchTideData, type TideData, type TidePrediction } from '../utils/tidesApi';
 
 interface WeatherData {
   current: {
@@ -92,8 +93,11 @@ const getPressureTrend = (currentPressure: number, previousPressure: number): st
 
 const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, selectedZone, forecasts }) => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [tideData, setTideData] = useState<TideData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [tideLoading, setTideLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [tideError, setTideError] = useState<string>('');
 
   // Get unique forecast dates from NOAA data
   const getForecastDates = () => {
@@ -133,6 +137,27 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
       fetchWeatherData();
     }
   }, [latitude, longitude]);
+
+  useEffect(() => {
+    const fetchTidesData = async () => {
+      setTideLoading(true);
+      setTideError('');
+      
+      try {
+        const tides = await fetchTideData(selectedZone, latitude, longitude);
+        setTideData(tides);
+      } catch (err) {
+        console.error('Error fetching tide data:', err);
+        setTideError(err instanceof Error ? err.message : 'Failed to fetch tide data');
+      } finally {
+        setTideLoading(false);
+      }
+    };
+
+    if (selectedZone && latitude && longitude) {
+      fetchTidesData();
+    }
+  }, [selectedZone, latitude, longitude]);
 
   if (loading) {
     return (
@@ -180,6 +205,25 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const formatTideTime = (timeStr: string) => {
+    return new Date(timeStr).toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/New_York'
+    });
+  };
+
+  const getTodaysTides = () => {
+    if (!tideData || !tideData.predictions) return [];
+    
+    const today = new Date().toISOString().split('T')[0];
+    return tideData.predictions.filter(tide => {
+      const tideDate = new Date(tide.time).toISOString().split('T')[0];
+      return tideDate === today;
+    }).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
   };
 
   // Get weather data for a specific date
@@ -358,11 +402,82 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
           );
         })}
       </div>
+
+      {/* Tide Information */}
+      {tideData && (
+        <div className="mt-6 border border-terminal-border bg-terminal-bg-alt p-4 rounded">
+          <h2 className="text-terminal-accent mb-4 font-semibold">
+            <span className="text-terminal-success">$</span> TIDE INFORMATION
+          </h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Today's Tides */}
+            <div>
+              <h3 className="text-terminal-accent font-medium mb-3 border-b border-terminal-fg/20 pb-1">
+                Today's Tides
+              </h3>
+              {tideLoading ? (
+                <div className="text-terminal-accent">
+                  <span className="animate-pulse">Loading tide data...</span>
+                </div>
+              ) : tideError ? (
+                <div className="text-terminal-error text-sm">{tideError}</div>
+              ) : getTodaysTides().length > 0 ? (
+                <div className="space-y-2">
+                  {getTodaysTides().map((tide, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <span className={`${tide.type === 'H' ? 'text-blue-400' : 'text-green-400'}`}>
+                          {tide.type === 'H' ? '🌊 High' : '🏖️ Low'}
+                        </span>
+                        <span>{formatTideTime(tide.time)}</span>
+                      </span>
+                      <span className="text-terminal-accent">
+                        {tide.value.toFixed(1)} ft
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-terminal-muted text-sm">No tide data available for today</div>
+              )}
+            </div>
+
+            {/* Tide Station Info */}
+            <div>
+              <h3 className="text-terminal-accent font-medium mb-3 border-b border-terminal-fg/20 pb-1">
+                Tide Station
+              </h3>
+              <div className="space-y-2 text-sm">
+                {tideData.stationName && (
+                  <>
+                    <div>
+                      <span className="text-terminal-accent font-semibold">Station: </span>
+                      <span>{tideData.stationName}</span>
+                    </div>
+                    <div>
+                      <span className="text-terminal-accent font-semibold">ID: </span>
+                      <span>{tideData.stationId}</span>
+                    </div>
+                  </>
+                )}
+                <div>
+                  <span className="text-terminal-accent font-semibold">Predictions: </span>
+                  <span>{tideData.predictions.length} periods</span>
+                </div>
+                <div className="text-xs text-terminal-muted mt-2">
+                  {tideData.disclaimer}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Source Attribution */}
       <div className="mt-6 pt-4 border-t border-terminal-fg/20">
         <h4 className="text-terminal-accent font-medium mb-3">Data Sources & Attribution</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-terminal-muted">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-terminal-muted">
           <div className="space-y-2">
             <div>
               <span className="text-terminal-accent font-semibold">Marine Forecast Data:</span>
@@ -394,6 +509,25 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
               </a></div>
               <div>• Model: ECMWF, GFS, ICON</div>
               <div>• Resolution: 0.25° (~25km)</div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <span className="text-terminal-accent font-semibold">Tide Data:</span>
+              {tideData && tideData.stationName ? (
+                <>
+                  <div>• Source: NOAA Tides & Currents</div>
+                  <div>• Station: {tideData.stationName}</div>
+                  <div>• ID: {tideData.stationId}</div>
+                </>
+              ) : (
+                <>
+                  <div>• Source: Open-Meteo Marine API</div>
+                  <div>• Model: Global Ocean Tidal Models</div>
+                </>
+              )}
+              <div>• Timezone: America/New_York</div>
+              <div>• Updated: Real-time predictions</div>
             </div>
           </div>
         </div>

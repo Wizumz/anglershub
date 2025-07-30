@@ -348,14 +348,15 @@ function extractWinds(text) {
   //          "NE winds 5 to 10 kt, INCREASING TO 10 TO 15 KT IN THE AFTERNOON"
   //          "NE winds 10 to 15 kt. GUSTS UP TO 20 KT IN THE EVENING"
   
-  // First try to match the main wind pattern and capture everything until a period or major break
-  let windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.]*?(?:kt|knots?|mph|kts)[^.]*?)(?:\.|$|(?=\s+[A-Z][a-z]+\s+(?:around|1|2|3|4|5|6|7|8|9)))/i);
+  // First try to match wind pattern and capture until we hit seas/waves or major weather change
+  let windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+(.*?)(?=\s+(?:seas?|waves?)\s+|$)/i);
   
   if (windMatch) {
     let fullWindText = `${windMatch[1]} winds ${windMatch[2].trim()}`;
     
-    // Clean up and ensure proper formatting
+    // Remove trailing periods and clean up
     fullWindText = fullWindText
+      .replace(/\s*\.\s*$/, '')       // remove trailing period
       .replace(/\s+/g, ' ')           // normalize spaces
       .replace(/kt\s*,?\s*([A-Z])/g, 'kt, $1')  // ensure comma after kt before capitalized conditions
       .trim();
@@ -363,7 +364,23 @@ function extractWinds(text) {
     return fullWindText;
   }
   
-  // Fallback to simpler pattern if complex one fails
+  // Fallback: try to capture wind info more broadly (including direction changes, etc.)
+  windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.]*(?:kt|knots?|mph|kts).*?)(?=\s+(?:seas?|waves?|visibility|vsby)\s+|\.\s+(?:seas?|waves?|visibility|vsby)|\s+[A-Z][a-z]+\s+around|$)/i);
+  
+  if (windMatch) {
+    let fullWindText = `${windMatch[1]} winds ${windMatch[2].trim()}`;
+    
+    // Clean up and format
+    fullWindText = fullWindText
+      .replace(/\s*\.\s*$/, '')       // remove trailing period
+      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/kt\s*,?\s*([A-Z])/g, 'kt, $1')  // ensure comma after kt before capitalized conditions
+      .trim();
+    
+    return fullWindText;
+  }
+  
+  // Final fallback to simple pattern
   windMatch = text.match(/([NSEW]{1,2})\s+winds?\s+([^.,]*(?:kt|knots?|mph|kts)[^.,]*)/i);
   return windMatch ? `${windMatch[1]} winds ${windMatch[2].trim()}` : '';
 }
@@ -374,14 +391,15 @@ function extractSeas(text) {
   //          "WAVES AROUND 2 FT IN THE EVENING, THEN 1 FOOT OR LESS"
   //          "Seas 2 to 4 ft, BUILDING TO 4 TO 6 FT"
   
-  // First try to match seas/waves pattern and capture everything until a period or major break
-  let seasMatch = text.match(/(?:seas?|waves?)\s+([^.]*?(?:ft|feet|foot)[^.]*?)(?:\.|$|(?=\s+[A-Z][a-z]+\s+(?:around|1|2|3|4|5|6|7|8|9|[NSEW])))/i);
+  // First try to match seas/waves pattern and capture until visibility, wave detail, or end
+  let seasMatch = text.match(/(?:seas?|waves?)\s+(.*?)(?=\s+(?:wave\s+detail|visibility|vsby|thunderstorms?|tstms?)\s+|$)/i);
   
   if (seasMatch) {
     let fullSeasText = seasMatch[1].trim();
     
-    // Clean up and ensure proper formatting
+    // Remove trailing periods and clean up
     fullSeasText = fullSeasText
+      .replace(/\s*\.\s*$/, '')       // remove trailing period
       .replace(/\s+/g, ' ')           // normalize spaces
       .replace(/ft\s*,?\s*([A-Z])/g, 'ft, $1')  // ensure comma after ft before capitalized conditions
       .trim();
@@ -389,14 +407,24 @@ function extractSeas(text) {
     return fullSeasText;
   }
   
-  // Fallback to simpler pattern if complex one fails
-  seasMatch = text.match(/seas?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  // Fallback: try to capture seas more broadly
+  seasMatch = text.match(/(?:seas?|waves?)\s+([^.]*(?:ft|feet|foot).*?)(?=\s+(?:wave\s+detail|visibility|vsby|thunderstorms?|tstms?)\s+|\.\s+(?:wave\s+detail|visibility|vsby)|$)/i);
   
-  // Fallback to "Waves" if "Seas" not found
-  if (!seasMatch) {
-    seasMatch = text.match(/waves?\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
+  if (seasMatch) {
+    let fullSeasText = seasMatch[1].trim();
+    
+    // Clean up and format
+    fullSeasText = fullSeasText
+      .replace(/\s*\.\s*$/, '')       // remove trailing period
+      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/ft\s*,?\s*([A-Z])/g, 'ft, $1')  // ensure comma after ft before capitalized conditions
+      .trim();
+    
+    return fullSeasText;
   }
   
+  // Final fallback to simple pattern
+  seasMatch = text.match(/(?:seas?|waves?)\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
   return seasMatch ? seasMatch[1].trim() : '';
 }
 

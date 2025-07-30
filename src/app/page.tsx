@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import LocationSelector from '../components/LocationSelector';
 import ForecastDisplay from '../components/ForecastDisplay';
+import DetailedWeather from '../components/DetailedWeather';
 import PWAManager from '../components/PWAManager';
 
 interface WeatherForecast {
@@ -14,6 +15,14 @@ interface WeatherForecast {
   waveDetail?: string;
   thunderstorms?: string;
   visibility?: string;
+  description: string;
+  summary?: {
+    type: string;
+    icon: string;
+    text: string;
+    color: string;
+    bold: boolean;
+  };
 }
 
 interface MarineZone {
@@ -237,7 +246,15 @@ export default function Home() {
         seas: sampleSeas[i],
         waveDetail: sampleWaveDetail[i],
         thunderstorms: i === 4 ? 'Thunderstorms likely after 2 PM' : undefined,
-        visibility: i < 3 ? 'Greater than 6 miles' : 'Reduced in rain showers'
+        visibility: i < 3 ? 'Greater than 6 miles' : 'Reduced in rain showers',
+        description: i === 4 ? 'Thunderstorms' : i < 2 ? 'Fair' : 'Partly cloudy',
+        summary: {
+          type: i > 3 ? 'danger' : i > 1 ? 'moderate' : 'good',
+          icon: i === 4 ? '⛈️' : i > 2 ? '💨' : '⛵',
+          text: i === 4 ? 'Storm Warning!' : i > 2 ? 'Breezy Conditions' : 'Good Sailing',
+          color: i > 3 ? 'red' : i > 1 ? 'blue' : 'green',
+          bold: i > 3
+        }
       });
     }
     
@@ -453,6 +470,21 @@ export default function Home() {
             />
           </div>
         );
+      })()}
+
+      {/* Detailed Weather with Tide Data */}
+      {forecasts.length > 0 && !loading && (() => {
+        const selectedMarineZone = zones.find(zone => zone.zone_code === selectedZone);
+        return selectedMarineZone && selectedMarineZone.latitude && selectedMarineZone.longitude ? (
+          <div className="mt-6">
+            <DetailedWeather 
+              latitude={selectedMarineZone.latitude}
+              longitude={selectedMarineZone.longitude}
+              selectedZone={selectedZone}
+              forecasts={forecasts}
+            />
+          </div>
+        ) : null;
       })()}
 
       {/* Footer */}

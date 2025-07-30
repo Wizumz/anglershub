@@ -1,0 +1,102 @@
+{
+  "name": "NOAA Marine Weather",
+  "short_name": "Marine Weather",
+  "description": "Real-time marine forecasts and detailed weather conditions for US East Coast waters",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e0a",
+  "theme_color": "#00ff41",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["weather", "navigation", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Boston Harbor",
+      "short_name": "Boston",
+      "description": "Quick access to Boston Harbor forecast",
+      "url": "/?zone=ANZ230",
+      "icons": [{ "src": "/icons/shortcut-boston.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Cape Cod Bay",
+      "short_name": "Cape Cod",
+      "description": "Quick access to Cape Cod Bay forecast",
+      "url": "/?zone=ANZ231",
+      "icons": [{ "src": "/icons/shortcut-cape.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "New York Harbor",
+      "short_name": "NYC Harbor",
+      "description": "Quick access to New York Harbor forecast",
+      "url": "/?zone=ANZ338",
+      "icons": [{ "src": "/icons/shortcut-nyc.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-main.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Main forecast interface"
+    },
+    {
+      "src": "/screenshots/mobile-main.png",
+      "sizes": "360x640",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile forecast view"
+    }
+  ]
+}
