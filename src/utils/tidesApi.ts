@@ -133,16 +133,48 @@ const calculateTidalCoefficient = (predictions: TidePrediction[]): number => {
   
   if (highs.length === 0 || lows.length === 0) return 50;
   
-  // Calculate tidal range (difference between high and low)
-  const maxHigh = Math.max(...highs);
-  const minLow = Math.min(...lows);
-  const tidalRange = maxHigh - minLow;
+  // Calculate average tidal range over the prediction period
+  let totalRange = 0;
+  let rangeCount = 0;
   
-  // Convert range to coefficient (approximation)
-  // This is a simplified calculation - real coefficients consider astronomical factors
-  const coefficient = Math.min(120, Math.max(20, Math.round(tidalRange * 15 + 30)));
+  // Group predictions by day and calculate daily ranges
+  const predictionsByDay = predictions.reduce((acc, pred) => {
+    const date = pred.time.split(' ')[0]; // Get date part
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(pred);
+    return acc;
+  }, {} as Record<string, TidePrediction[]>);
   
-  return coefficient;
+  Object.values(predictionsByDay).forEach(dayPreds => {
+    const dayHighs = dayPreds.filter(p => p.type === 'H').map(p => p.value);
+    const dayLows = dayPreds.filter(p => p.type === 'L').map(p => p.value);
+    
+    if (dayHighs.length > 0 && dayLows.length > 0) {
+      const dayMaxHigh = Math.max(...dayHighs);
+      const dayMinLow = Math.min(...dayLows);
+      totalRange += (dayMaxHigh - dayMinLow);
+      rangeCount++;
+    }
+  });
+  
+  if (rangeCount === 0) return 50;
+  
+  const averageRange = totalRange / rangeCount;
+  
+  // More realistic coefficient calculation based on East Coast tidal ranges
+  // Typical ranges: 2-3ft = weak, 4-6ft = moderate, 7-8ft = strong, 9+ft = very strong
+  let coefficient;
+  if (averageRange <= 2.5) {
+    coefficient = 30 + (averageRange / 2.5) * 15; // 30-45
+  } else if (averageRange <= 5.0) {
+    coefficient = 45 + ((averageRange - 2.5) / 2.5) * 20; // 45-65
+  } else if (averageRange <= 7.5) {
+    coefficient = 65 + ((averageRange - 5.0) / 2.5) * 20; // 65-85
+  } else {
+    coefficient = 85 + Math.min(((averageRange - 7.5) / 2.5) * 25, 35); // 85-120
+  }
+  
+  return Math.round(Math.min(120, Math.max(20, coefficient)));
 };
 
 // Get tidal coefficient description

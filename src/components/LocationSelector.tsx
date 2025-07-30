@@ -59,6 +59,7 @@ export default function LocationSelector({ zones, selectedZone, onZoneChange }: 
         zone.zone_code.toLowerCase().includes(inputValue.toLowerCase()) ||
         zone.location_name.toLowerCase().includes(inputValue.toLowerCase())
       );
+      console.log('Filter input:', inputValue, 'Results:', filtered.length, 'First few:', filtered.slice(0, 3).map(z => z.zone_code));
       setFilteredZones(filtered);
     }
     setHighlightedIndex(-1);
