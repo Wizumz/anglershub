@@ -223,9 +223,9 @@ function parseMarineForecast(html) {
         const isTimeStamp = /\d{1,2}:\d{2}\s+[AP]M/.test(rawPeriod);
         const isZoneHeader = /^[A-Z]{3}\d{3}/.test(rawPeriod);
         
-        // ALWAYS skip the first match as it's consistently problematic
-        if (matchCount === 1) {
-          console.log(`Skipping first match (always problematic): ${rawPeriod}`);
+        // Skip problematic matches, but don't blindly skip the first one if it's valid
+        if (matchCount === 1 && (isTimeStamp || isZoneHeader || rawPeriod.length < 3)) {
+          console.log(`Skipping first match (problematic): ${rawPeriod}`);
           continue;
         }
         
@@ -254,7 +254,7 @@ function parseMarineForecast(html) {
           const summary = generateSummary(rawForecastText, winds, seas, waveDetail);
 
           // Calculate the appropriate date for this forecast period
-          const forecastDate = calculateForecastDate(period, forecasts.length);
+          const forecastDate = calculateForecastDate(period, forecasts.length, forecasts);
 
           forecasts.push({
             date: forecastDate,
@@ -316,7 +316,7 @@ function parseMarineForecast(html) {
             const description = extractWeatherConditions(forecastText);
 
             // Calculate the appropriate date for this forecast period
-            const forecastDate = calculateForecastDate(period, forecasts.length);
+            const forecastDate = calculateForecastDate(period, forecasts.length, forecasts);
 
             forecasts.push({
               date: forecastDate,
@@ -406,6 +406,7 @@ function extractSeas(text) {
     // Remove general weather conditions that shouldn't be part of seas description
     fullSeasText = fullSeasText
       .replace(/\s*\.\s*hazy.*$/i, '')       // remove "hazy" and anything after
+      .replace(/\s*hazy\s*$/i, '')           // remove "hazy" at the end
       .replace(/\s*\.\s*fog.*$/i, '')        // remove "fog" and anything after  
       .replace(/\s*\.\s*clear.*$/i, '')      // remove "clear" and anything after
       .replace(/\s*\.\s*sunny.*$/i, '')      // remove "sunny" and anything after
@@ -429,10 +430,11 @@ function extractSeas(text) {
   if (seasMatch) {
     let fullSeasText = seasMatch[1].trim();
     
-    // Clean up and format, removing weather conditions
+        // Clean up and format, removing weather conditions
     fullSeasText = fullSeasText
       .replace(/\s*\.\s*hazy.*$/i, '')       // remove "hazy" and anything after
-      .replace(/\s*\.\s*fog.*$/i, '')        // remove "fog" and anything after
+      .replace(/\s*hazy\s*$/i, '')           // remove "hazy" at the end
+      .replace(/\s*\.\s*fog.*$/i, '')        // remove "fog" and anything after  
       .replace(/\s*\.\s*clear.*$/i, '')      // remove "clear" and anything after
       .replace(/\s*\.\s*sunny.*$/i, '')      // remove "sunny" and anything after
       .replace(/\s*\.\s*cloudy.*$/i, '')     // remove "cloudy" and anything after
@@ -454,7 +456,8 @@ function extractSeas(text) {
   if (seasMatch) {
     let result = seasMatch[1].trim();
     // Remove weather conditions from the end
-    result = result.replace(/\s+(?:hazy|fog|clear|sunny|cloudy).*$/i, '');
+    result = result.replace(/\s+(?:hazy|fog|clear|sunny|cloudy).*$/i, '')
+                   .replace(/\s*hazy\s*$/i, '');  // Remove standalone "hazy"
     return result;
   }
   
@@ -682,12 +685,15 @@ function extractWavePeriod(waveDetail) {
 }
 
 // Calculate the appropriate date for a forecast period
-function calculateForecastDate(period, periodIndex) {
+function calculateForecastDate(period, periodIndex, existingForecasts = []) {
   const now = new Date();
   const currentHour = now.getHours();
   
   // Normalize period for comparison
   const normalizedPeriod = period.toUpperCase().trim();
+  
+  // Check if we have a TODAY period in the forecasts already
+  const hasToday = existingForecasts.some(f => f.period && f.period.toUpperCase() === 'TODAY');
   
   // TODAY period should be today
   if (normalizedPeriod === 'TODAY') {
@@ -765,20 +771,45 @@ function calculateForecastDate(period, periodIndex) {
   }
   
   // Fallback: use period index to calculate date
-  // NOAA forecasts typically follow: TODAY, TONIGHT, WED, WED NIGHT, THU, THU NIGHT, etc.
+  // NOAA forecasts follow patterns like: TODAY, TONIGHT, WED, WED NIGHT, THU, THU NIGHT, etc.
+  // OR: TONIGHT, WED, WED NIGHT, THU, THU NIGHT, etc. (when issued late in day)
   const targetDate = new Date(now);
   let daysToAdd = 0;
   
   if (periodIndex === 0) {
-    // First period: TODAY or current day
-    daysToAdd = 0;
+    // First period: could be TODAY, TONIGHT, or a day name
+    if (normalizedPeriod === 'TODAY') {
+      daysToAdd = 0;
+    } else if (normalizedPeriod === 'TONIGHT') {
+      daysToAdd = 0;  // TONIGHT is still "today"
+    } else {
+      // First period is a day name (like WED), this should be tomorrow if no TODAY
+      daysToAdd = hasToday ? 1 : 1;
+    }
   } else if (periodIndex === 1) {
-    // Second period: TONIGHT (same day as first) or next part of day
-    daysToAdd = normalizedPeriod === 'TONIGHT' ? 0 : 0;
+    // Second period: depends on what the first period was and forecast pattern
+    if (normalizedPeriod === 'TONIGHT') {
+      daysToAdd = 0;  // TONIGHT is still today
+    } else if (normalizedPeriod.includes('NIGHT')) {
+      // Night period - same day as its corresponding day
+      daysToAdd = hasToday ? 1 : 1;
+    } else {
+      // Day period - if we started with TONIGHT, this is tomorrow
+      daysToAdd = hasToday ? 1 : 1;
+    }
   } else {
-    // For subsequent periods: each pair (day/night) represents one calendar day
-    // Period 2,3 = tomorrow, period 4,5 = day after tomorrow, etc.
-    daysToAdd = Math.floor((periodIndex - 2) / 2) + 1;
+    // For subsequent periods: calculate based on day/night pattern
+    // Structure: [TODAY], TONIGHT, DAY1, DAY1_NIGHT, DAY2, DAY2_NIGHT, etc.
+    let baseOffset = hasToday ? 2 : 1; // Offset to account for TODAY/TONIGHT already counted
+    let dayPairIndex = Math.floor((periodIndex - baseOffset) / 2);
+    
+    if (normalizedPeriod.includes('NIGHT')) {
+      // Night period - same day as its day counterpart
+      daysToAdd = hasToday ? dayPairIndex + 1 : dayPairIndex + 1;
+    } else {
+      // Day period 
+      daysToAdd = hasToday ? dayPairIndex + 1 : dayPairIndex + 1;
+    }
   }
   
   targetDate.setDate(targetDate.getDate() + daysToAdd);
