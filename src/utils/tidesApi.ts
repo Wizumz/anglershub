@@ -24,17 +24,33 @@ interface TideData {
 
 // Map marine zones to nearest tide stations
 const ZONE_TO_TIDE_STATION: Record<string, string> = {
-  // Maine
-  'ANZ230': '8418150', // Eastport, ME
+  // Maine Coastal Waters
+  'ANZ150': '8413320', // Bar Harbor, ME
+  'ANZ151': '8410140', // Cutler Farris Wharf, ME  
+  'ANZ152': '8411060', // Cutler Naval Computer, ME
+  'ANZ153': '8416092', // Winter Harbor, ME
+  'ANZ154': '8418150', // Eastport, ME
+  
+  // Maine/New Hampshire Border
+  'ANZ230': '8443970', // Boston, MA (was incorrectly Portland, ME)
   'ANZ231': '8413320', // Bar Harbor, ME
-  'ANZ232': '8410140', // Cutler Farris Wharf, ME
-  'ANZ233': '8411060', // Cutler Naval Computer, ME
-  'ANZ234': '8447930', // Woods Hole, MA (Vineyard Sound)
-  'ANZ235': '8413320', // Bar Harbor, ME
-  'ANZ236': '8416092', // Winter Harbor, ME
-  'ANZ250': '8418150', // Eastport, ME
-  'ANZ251': '8413320', // Bar Harbor, ME
-  'ANZ252': '8410140', // Cutler Farris Wharf, ME
+  'ANZ232': '8447930', // Woods Hole, MA (Nantucket Sound)
+  'ANZ233': '8447930', // Woods Hole, MA (Vineyard Sound)
+  'ANZ234': '8447930', // Woods Hole, MA (Buzzards Bay)
+  'ANZ235': '8452660', // Newport, RI (Rhode Island Sound)
+  'ANZ236': '8454000', // Providence, RI (Narragansett Bay)
+  'ANZ237': '8461490', // New London, CT (Block Island Sound)
+  
+  // Massachusetts Bay and Offshore
+  'ANZ250': '8443970', // Boston, MA (Coastal waters east of Ipswich Bay)
+  'ANZ251': '8443970', // Boston, MA (Massachusetts Bay and Ipswich Bay)
+  'ANZ254': '8449130', // Nantucket Island, MA (Provincetown to Chatham to Nantucket)
+  'ANZ255': '8449130', // Nantucket Island, MA (South of Martha's Vineyard and Nantucket)
+  'ANZ256': '8461490', // New London, CT (Montauk to Martha's Vineyard)
+  
+  // Offshore Waters
+  'ANZ270': '8443970', // Boston, MA (Ocean Waters from Merrimack River to Plymouth)
+  'ANZ271': '8449130', // Nantucket Island, MA (Ocean Waters from Provincetown to Nantucket)
   
   // New Hampshire/Massachusetts
   'ANZ330': '8423898', // Fort Point, NH
@@ -42,56 +58,60 @@ const ZONE_TO_TIDE_STATION: Record<string, string> = {
   'ANZ332': '8447930', // Gloucester, MA
   'ANZ333': '8443970', // Boston, MA
   'ANZ334': '8447930', // Gloucester, MA
-  'ANZ335': '8443970', // Boston, MA
+  'ANZ335': '8461490', // New London, CT (was incorrectly Boston, MA)
   'ANZ336': '8447930', // Gloucester, MA
+  'ANZ338': '8447930', // Gloucester, MA
   
-  // Cape Cod/Rhode Island
-  'ANZ430': '8447930', // Gloucester, MA
-  'ANZ431': '8447387', // Scituate, MA
-  'ANZ432': '8447435', // Hingham, MA
-  'ANZ433': '8447930', // Gloucester, MA
-  'ANZ434': '8449130', // Nantucket Island, MA
-  'ANZ435': '8447387', // Scituate, MA
-  'ANZ436': '8447930', // Gloucester, MA
-  'ANZ437': '8454000', // Providence, RI
-  'ANZ438': '8452660', // Newport, RI
-  'ANZ439': '8452660', // Newport, RI
+  // Long Island Sound and Connecticut Waters
+  'ANZ340': '8461490', // New London, CT
+  'ANZ345': '8461490', // New London, CT
+  'ANZ350': '8510560', // Montauk, NY (was NC, moved to correct location)
+  'ANZ353': '8461490', // New London, CT
+  'ANZ355': '8461490', // New London, CT
   
-  // Connecticut/New York
-  'ANZ530': '8461490', // New London, CT
-  'ANZ531': '8510560', // Montauk, NY
-  'ANZ532': '8516945', // Kings Point, NY
-  'ANZ533': '8518750', // The Battery, NY
-  'ANZ534': '8516945', // Kings Point, NY
-  'ANZ535': '8518750', // The Battery, NY
-  'ANZ536': '8516945', // Kings Point, NY
-  'ANZ537': '8518750', // The Battery, NY
-  'ANZ538': '8516945', // Kings Point, NY
+  // New York Waters  
+  'ANZ370': '8516945', // Kings Point, NY
+  'ANZ373': '8518750', // The Battery, NY
+  'ANZ375': '8510560', // Montauk, NY
   
-  // New Jersey/Delaware
-  'ANZ630': '8531680', // Sandy Hook, NJ
-  'ANZ631': '8534720', // Atlantic City, NJ
-  'ANZ632': '8537121', // Cape Henlopen, DE
-  'ANZ633': '8534720', // Atlantic City, NJ
-  'ANZ634': '8537121', // Cape Henlopen, DE
-  'ANZ635': '8531680', // Sandy Hook, NJ
-  'ANZ636': '8534720', // Atlantic City, NJ
-  'ANZ637': '8537121', // Cape Henlopen, DE
+  // Delaware Bay and New Jersey (400 series)
+  'ANZ400': '8537121', // Cape Henlopen, DE
+  'ANZ401': '8537121', // Cape Henlopen, DE
+  'ANZ430': '8531680', // Sandy Hook, NJ
+  'ANZ431': '8534720', // Atlantic City, NJ
+  'ANZ432': '8537121', // Cape Henlopen, DE
+  'ANZ433': '8534720', // Atlantic City, NJ
+  'ANZ434': '8537121', // Cape Henlopen, DE
+  'ANZ435': '8531680', // Sandy Hook, NJ
+  'ANZ436': '8534720', // Atlantic City, NJ
+  'ANZ437': '8537121', // Cape Henlopen, DE
+  'ANZ450': '8534720', // Atlantic City, NJ
+  'ANZ451': '8537121', // Cape Henlopen, DE
+  'ANZ452': '8570283', // Ocean City Inlet, MD
+  'ANZ453': '8571892', // Wachapreague, VA
+  'ANZ454': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ455': '8571892', // Wachapreague, VA
+  'ANZ456': '8638863', // Chesapeake Bay Bridge Tunnel, VA
   
-  // Maryland/Virginia
-  'ANZ730': '8570283', // Ocean City Inlet, MD
-  'ANZ731': '8571892', // Wachapreague, VA
-  'ANZ732': '8638863', // Chesapeake Bay Bridge Tunnel, VA
-  'ANZ733': '8571892', // Wachapreague, VA
-  'ANZ734': '8638863', // Chesapeake Bay Bridge Tunnel, VA
-  'ANZ735': '8570283', // Ocean City Inlet, MD
-  'ANZ736': '8571892', // Wachapreague, VA
-  'ANZ737': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  // Chesapeake Bay and Virginia (600 series)
+  'ANZ600': '8570283', // Ocean City Inlet, MD
+  'ANZ630': '8571892', // Wachapreague, VA
+  'ANZ631': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ632': '8571892', // Wachapreague, VA
+  'ANZ633': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ634': '8570283', // Ocean City Inlet, MD
+  'ANZ635': '8571892', // Wachapreague, VA
+  'ANZ636': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ650': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ651': '8632200', // Kiptopeke, VA
+  'ANZ652': '8638610', // Sewells Point, VA
+  'ANZ653': '8637624', // Money Point, VA
+  'ANZ654': '8638863', // Chesapeake Bay Bridge Tunnel, VA
+  'ANZ655': '8632200', // Kiptopeke, VA
+  'ANZ656': '8638610', // Sewells Point, VA
   
-  // North Carolina (Fixed duplicate codes)
-  'ANZ350': '8652587', // Oregon Inlet Marina, NC (was ANZ150)
-  'ANZ352': '8654467', // Hatteras, NC (was ANZ152)
-  'ANZ354': '8656483', // Beaufort, NC (was ANZ154)
+  // North Carolina (800 series) - Fixed previous incorrect mappings
+  'ANZ800': '8652587', // Oregon Inlet Marina, NC
   'ANZ830': '8652587', // Oregon Inlet Marina, NC
   'ANZ831': '8654467', // Hatteras, NC
   'ANZ832': '8656483', // Beaufort, NC
@@ -102,27 +122,42 @@ const ZONE_TO_TIDE_STATION: Record<string, string> = {
   'ANZ837': '8656483', // Beaufort, NC
   'ANZ838': '8658163', // Wrightsville Beach, NC
   'ANZ839': '8661070', // Southport, NC
+  'ANZ850': '8652587', // Oregon Inlet Marina, NC
+  'ANZ851': '8654467', // Hatteras, NC
+  'ANZ852': '8656483', // Beaufort, NC
+  'ANZ853': '8658163', // Wrightsville Beach, NC
+  'ANZ854': '8661070', // Southport, NC
+  'ANZ855': '8652587', // Oregon Inlet Marina, NC
+  'ANZ856': '8654467', // Hatteras, NC
+  'ANZ857': '8656483', // Beaufort, NC
+  'ANZ858': '8658163', // Wrightsville Beach, NC
+  'ANZ859': '8661070', // Southport, NC
   
-  // South Carolina/Georgia
-  'ANZ930': '8665530', // Charleston, SC
-  'ANZ931': '8670870', // Fort Pulaski, GA
-  'ANZ932': '8677344', // Fernandina Beach, FL
-  'ANZ933': '8665530', // Charleston, SC
-  'ANZ934': '8670870', // Fort Pulaski, GA
-  'ANZ935': '8677344', // Fernandina Beach, FL
-  'ANZ936': '8665530', // Charleston, SC
-  'ANZ937': '8670870', // Fort Pulaski, GA
-  'ANZ938': '8677344', // Fernandina Beach, FL
-  
-  // Florida East Coast
-  'ANZ1030': '8677344', // Fernandina Beach, FL
-  'ANZ1031': '8720218', // Mayport, FL
-  'ANZ1032': '8720587', // Trident Pier, FL
-  'ANZ1033': '8721604', // Daytona Beach, FL
-  'ANZ1034': '8722670', // Lake Worth Pier, FL
-  'ANZ1035': '8723214', // Virginia Key, FL
-  'ANZ1036': '8723970', // Vaca Key, FL
-  'ANZ1037': '8724580', // Key West, FL
+  // South Carolina/Georgia/Florida (AMZ zones)
+  'AMZ230': '8665530', // Charleston, SC
+  'AMZ250': '8665530', // Charleston, SC
+  'AMZ254': '8670870', // Fort Pulaski, GA
+  'AMZ330': '8670870', // Fort Pulaski, GA
+  'AMZ350': '8677344', // Fernandina Beach, FL
+  'AMZ352': '8720218', // Mayport, FL
+  'AMZ354': '8721604', // Daytona Beach, FL
+  'AMZ370': '8722670', // Lake Worth Pier, FL
+  'AMZ372': '8723214', // Virginia Key, FL
+  'AMZ430': '8723970', // Vaca Key, FL
+  'AMZ450': '8724580', // Key West, FL
+  'AMZ470': '8724580', // Key West, FL
+  'AMZ550': '8724580', // Key West, FL
+  'AMZ572': '8725110', // Naples, FL
+  'AMZ574': '8726607', // Old Port Tampa, FL
+  'AMZ610': '8726724', // Clearwater Beach, FL
+  'AMZ630': '8727520', // Cedar Key, FL
+  'AMZ650': '8728690', // Apalachicola, FL
+  'AMZ670': '8729840', // Panama City, FL
+  'AMZ672': '8731439', // Pensacola, FL
+  'AMZ730': '8735180', // Dauphin Island, AL
+  'AMZ750': '8740166', // Grand Isle, LA
+  'AMZ752': '8761724', // Galveston, TX
+  'AMZ772': '8775870', // Port Arthur, TX
 };
 
 

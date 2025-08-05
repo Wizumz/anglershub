@@ -323,7 +323,7 @@ export default function ForecastDisplay({ forecasts, selectedZone, latitude, lon
                       ) : tidesForPeriod.length > 0 ? (
                         <div className="space-y-1">
                           <div className="text-terminal-accent font-semibold text-xs">Tides:</div>
-                          {tidesForPeriod.slice(0, 2).map((tide, idx) => (
+                          {tidesForPeriod.slice(0, 4).map((tide, idx) => (
                             <div key={idx} className="flex justify-between">
                               <span className={`${tide.type === 'H' ? 'text-blue-400' : 'text-green-400'}`}>
                                 {tide.type === 'H' ? '🌊 High' : '🏖️ Low'} {formatTideTime(tide.time)}
