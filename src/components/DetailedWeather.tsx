@@ -363,7 +363,7 @@ const DetailedWeather: React.FC<DetailedWeatherProps> = ({ latitude, longitude, 
                         </div>
                         <div>
                           <span className="text-terminal-accent font-semibold">Pressure: </span>
-                          <span>{Math.round(weatherData.current.pressure_msl)} hPa</span>
+                          <span>{(weatherData.current.pressure_msl * 0.02953).toFixed(2)} inHg</span>
                         </div>
                         <div className="col-span-2">
                           <span className="text-terminal-accent font-semibold">Pressure Trend: </span>

@@ -253,8 +253,11 @@ function parseMarineForecast(html) {
           // Generate summary using decision tree
           const summary = generateSummary(rawForecastText, winds, seas, waveDetail);
 
+          // Calculate the appropriate date for this forecast period
+          const forecastDate = calculateForecastDate(period, forecasts.length);
+
           forecasts.push({
-            date: new Date().toISOString(),
+            date: forecastDate,
             period,
             winds,
             seas,
@@ -312,8 +315,11 @@ function parseMarineForecast(html) {
             const visibility = extractVisibility(forecastText);
             const description = extractWeatherConditions(forecastText);
 
+            // Calculate the appropriate date for this forecast period
+            const forecastDate = calculateForecastDate(period, forecasts.length);
+
             forecasts.push({
-              date: new Date().toISOString(),
+              date: forecastDate,
               period,
               winds,
               seas,
@@ -397,12 +403,22 @@ function extractSeas(text) {
   if (seasMatch) {
     let fullSeasText = seasMatch[1].trim();
     
-    // Remove trailing periods and clean up
+    // Remove general weather conditions that shouldn't be part of seas description
     fullSeasText = fullSeasText
-      .replace(/\s*\.\s*$/, '')       // remove trailing period
-      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/\s*\.\s*hazy.*$/i, '')       // remove "hazy" and anything after
+      .replace(/\s*\.\s*fog.*$/i, '')        // remove "fog" and anything after  
+      .replace(/\s*\.\s*clear.*$/i, '')      // remove "clear" and anything after
+      .replace(/\s*\.\s*sunny.*$/i, '')      // remove "sunny" and anything after
+      .replace(/\s*\.\s*cloudy.*$/i, '')     // remove "cloudy" and anything after
+      .replace(/\s*\.\s*$/, '')              // remove trailing period
+      .replace(/\s+/g, ' ')                  // normalize spaces
       .replace(/ft\s*,?\s*([A-Z])/g, 'ft, $1')  // ensure comma after ft before capitalized conditions
       .trim();
+    
+    // If we removed everything, it means there was no actual seas information
+    if (!fullSeasText || !fullSeasText.match(/(?:ft|feet|foot)/i)) {
+      return '';
+    }
     
     return fullSeasText;
   }
@@ -413,19 +429,36 @@ function extractSeas(text) {
   if (seasMatch) {
     let fullSeasText = seasMatch[1].trim();
     
-    // Clean up and format
+    // Clean up and format, removing weather conditions
     fullSeasText = fullSeasText
-      .replace(/\s*\.\s*$/, '')       // remove trailing period
-      .replace(/\s+/g, ' ')           // normalize spaces
+      .replace(/\s*\.\s*hazy.*$/i, '')       // remove "hazy" and anything after
+      .replace(/\s*\.\s*fog.*$/i, '')        // remove "fog" and anything after
+      .replace(/\s*\.\s*clear.*$/i, '')      // remove "clear" and anything after
+      .replace(/\s*\.\s*sunny.*$/i, '')      // remove "sunny" and anything after
+      .replace(/\s*\.\s*cloudy.*$/i, '')     // remove "cloudy" and anything after
+      .replace(/\s*\.\s*$/, '')              // remove trailing period
+      .replace(/\s+/g, ' ')                  // normalize spaces
       .replace(/ft\s*,?\s*([A-Z])/g, 'ft, $1')  // ensure comma after ft before capitalized conditions
       .trim();
+    
+    // If we removed everything, it means there was no actual seas information
+    if (!fullSeasText || !fullSeasText.match(/(?:ft|feet|foot)/i)) {
+      return '';
+    }
     
     return fullSeasText;
   }
   
-  // Final fallback to simple pattern
+  // Final fallback to simple pattern, but exclude weather conditions
   seasMatch = text.match(/(?:seas?|waves?)\s+([^.,]*(?:ft|feet|foot)[^.,]*)/i);
-  return seasMatch ? seasMatch[1].trim() : '';
+  if (seasMatch) {
+    let result = seasMatch[1].trim();
+    // Remove weather conditions from the end
+    result = result.replace(/\s+(?:hazy|fog|clear|sunny|cloudy).*$/i, '');
+    return result;
+  }
+  
+  return '';
 }
 
 function extractWaveDetail(text) {
@@ -460,7 +493,7 @@ function extractWeatherConditions(text) {
   const weatherPatterns = [
     /(?:chance of |scattered |slight chance of )?(showers?|rain|tstms?|thunderstorms?)/gi,
     /(?:partly |mostly |becoming )?(?:cloudy|clear|overcast|sunny)/gi,
-    /fog|mist|haze/gi,
+    /fog|mist|hazy?/gi,  // Include "hazy" as a weather condition
     /(?:light |heavy )?(?:snow|sleet|freezing rain)/gi
   ];
   
@@ -646,4 +679,108 @@ function extractWavePeriod(waveDetail) {
   // Look for "at X seconds" pattern
   const match = waveDetail.match(/at\s+(\d+(?:\.\d+)?)\s*(?:seconds?|s)/i);
   return match ? parseFloat(match[1]) : 0;
+}
+
+// Calculate the appropriate date for a forecast period
+function calculateForecastDate(period, periodIndex) {
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Normalize period for comparison
+  const normalizedPeriod = period.toUpperCase().trim();
+  
+  // TODAY period should be today
+  if (normalizedPeriod === 'TODAY') {
+    return now.toISOString();
+  }
+  
+  // TONIGHT period should be today (but evening of today)
+  if (normalizedPeriod === 'TONIGHT') {
+    return now.toISOString();
+  }
+  
+  // Day names - map to proper dates
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const fullDayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  
+  // Check if it's a day name
+  const dayIndex = dayNames.indexOf(normalizedPeriod) >= 0 ? dayNames.indexOf(normalizedPeriod) :
+                  fullDayNames.indexOf(normalizedPeriod);
+  
+  if (dayIndex >= 0) {
+    // Calculate the date for this day
+    const targetDate = new Date(now);
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    let daysToAdd = dayIndex - currentDay;
+    
+    // If the target day is in the past, it means next week
+    if (daysToAdd < 0) {
+      daysToAdd += 7;
+    }
+    
+    // If the target day is today but we're in evening hours (after 6 PM), 
+    // and this is not the first few periods, it might mean next week
+    if (daysToAdd === 0 && currentHour >= 18 && periodIndex > 1) {
+      daysToAdd = 7;
+    }
+    
+    // However, if this is a very early period (first few), it's likely this week
+    if (periodIndex <= 1 && daysToAdd > 3) {
+      daysToAdd = daysToAdd - 7; // This week instead of next week
+      if (daysToAdd < 0) daysToAdd = 0; // Today at minimum
+    }
+    
+    targetDate.setDate(targetDate.getDate() + daysToAdd);
+    return targetDate.toISOString();
+  }
+  
+  // NIGHT periods should be the same day as their corresponding day
+  if (normalizedPeriod.includes('NIGHT')) {
+    const basePeriod = normalizedPeriod.replace(/\s*NIGHT$/, '');
+    const baseDayIndex = dayNames.indexOf(basePeriod) >= 0 ? dayNames.indexOf(basePeriod) :
+                        fullDayNames.indexOf(basePeriod);
+    
+    if (baseDayIndex >= 0) {
+      const targetDate = new Date(now);
+      const currentDay = now.getDay();
+      
+      let daysToAdd = baseDayIndex - currentDay;
+      
+      // Night of the same day
+      if (daysToAdd < 0) {
+        daysToAdd += 7;
+      }
+      
+      // If this is a very early period and would result in next week, 
+      // it's probably this week
+      if (periodIndex <= 3 && daysToAdd > 3) {
+        daysToAdd = daysToAdd - 7;
+        if (daysToAdd < 0) daysToAdd = 0;
+      }
+      
+      targetDate.setDate(targetDate.getDate() + daysToAdd);
+      return targetDate.toISOString();
+    }
+  }
+  
+  // Fallback: use period index to calculate date
+  // NOAA forecasts typically follow: TODAY, TONIGHT, WED, WED NIGHT, THU, THU NIGHT, etc.
+  const targetDate = new Date(now);
+  let daysToAdd = 0;
+  
+  if (periodIndex === 0) {
+    // First period: TODAY or current day
+    daysToAdd = 0;
+  } else if (periodIndex === 1) {
+    // Second period: TONIGHT (same day as first) or next part of day
+    daysToAdd = normalizedPeriod === 'TONIGHT' ? 0 : 0;
+  } else {
+    // For subsequent periods: each pair (day/night) represents one calendar day
+    // Period 2,3 = tomorrow, period 4,5 = day after tomorrow, etc.
+    daysToAdd = Math.floor((periodIndex - 2) / 2) + 1;
+  }
+  
+  targetDate.setDate(targetDate.getDate() + daysToAdd);
+  return targetDate.toISOString();
 }
